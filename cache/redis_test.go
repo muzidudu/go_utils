@@ -26,7 +26,7 @@ func newTestRedis(t *testing.T) *RedisCache {
 func TestRedisCache_GetSet(t *testing.T) {
 	c := newTestRedis(t)
 
-	val := []byte("hello world")
+	val := "hello world"
 	if err := c.Set("k1", val, 0); err != nil {
 		t.Fatal(err)
 	}
@@ -34,7 +34,7 @@ func TestRedisCache_GetSet(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if string(got) != string(val) {
+	if got.(string) != val {
 		t.Errorf("got %q", got)
 	}
 }
@@ -42,7 +42,7 @@ func TestRedisCache_GetSet(t *testing.T) {
 func TestRedisCache_GzipCompression(t *testing.T) {
 	c := newTestRedis(t)
 
-	val := []byte("repeated text repeated text repeated text")
+	val := "repeated text repeated text repeated text"
 	if err := c.Set("k1", val, 0); err != nil {
 		t.Fatal(err)
 	}
@@ -50,7 +50,7 @@ func TestRedisCache_GzipCompression(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if string(got) != string(val) {
+	if got.(string) != val {
 		t.Errorf("got %q", got)
 	}
 }
@@ -67,9 +67,9 @@ func TestRedisCache_Prefix(t *testing.T) {
 	defer c.Close()
 	defer mr.Close()
 
-	c.Set("user:1", []byte("alice"), 0)
+	c.Set("user:1", "alice", 0)
 	got, _ := c.Get("user:1")
-	if string(got) != "alice" {
+	if got.(string) != "alice" {
 		t.Errorf("got %q", got)
 	}
 }
@@ -77,7 +77,7 @@ func TestRedisCache_Prefix(t *testing.T) {
 func TestRedisCache_Delete(t *testing.T) {
 	c := newTestRedis(t)
 
-	c.Set("k1", []byte("v1"), 0)
+	c.Set("k1", "v1", 0)
 	c.Delete("k1")
 	if _, err := c.Get("k1"); err != ErrNotFound {
 		t.Errorf("expected ErrNotFound, got %v", err)
@@ -87,9 +87,9 @@ func TestRedisCache_Delete(t *testing.T) {
 func TestRedisCache_DeleteByPrefix(t *testing.T) {
 	c := newTestRedis(t)
 
-	c.Set("user:1", []byte("a"), 0)
-	c.Set("user:2", []byte("b"), 0)
-	c.Set("order:1", []byte("c"), 0)
+	c.Set("user:1", "a", 0)
+	c.Set("user:2", "b", 0)
+	c.Set("order:1", "c", 0)
 
 	n, err := c.DeleteByPrefix("user:")
 	if err != nil {
@@ -105,7 +105,7 @@ func TestRedisCache_DeleteByPrefix(t *testing.T) {
 		t.Error("user:2 should be deleted")
 	}
 	got, _ := c.Get("order:1")
-	if string(got) != "c" {
+	if got.(string) != "c" {
 		t.Errorf("order:1 should remain, got %q", got)
 	}
 }
@@ -117,7 +117,7 @@ func TestRedisCache_Exists(t *testing.T) {
 	if ok {
 		t.Error("expected false")
 	}
-	c.Set("k1", []byte("v1"), 0)
+	c.Set("k1", "v1", 0)
 	ok, _ = c.Exists("k1")
 	if !ok {
 		t.Error("expected true")
@@ -132,9 +132,9 @@ func TestRedisCache_TTL(t *testing.T) {
 	}
 	t.Cleanup(func() { mr.Close(); _ = c.Close() })
 
-	c.Set("k1", []byte("v1"), time.Second)
+	c.Set("k1", "v1", time.Second)
 	got, _ := c.Get("k1")
-	if string(got) != "v1" {
+	if got.(string) != "v1" {
 		t.Errorf("got %q", got)
 	}
 	mr.FastForward(time.Second + time.Millisecond)
@@ -160,9 +160,9 @@ func TestCacheFactory_WithRedis(t *testing.T) {
 	if !f.IsRedis() {
 		t.Error("expected Redis to be used")
 	}
-	f.Set("k1", []byte("v1"), 0)
+	f.Set("k1", "v1", 0)
 	got, _ := f.Get("k1")
-	if string(got) != "v1" {
+	if got.(string) != "v1" {
 		t.Errorf("got %q", got)
 	}
 }

@@ -40,8 +40,8 @@ func NewMemoryCache(cfg MemoryConfig) *MemoryCache {
 	}
 }
 
-// Get 获取缓存，自动解压
-func (c *MemoryCache) Get(key string) ([]byte, error) {
+// Get 获取缓存，自动解压并反序列化
+func (c *MemoryCache) Get(key string) (any, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	item, ok := c.data[key]
@@ -52,14 +52,35 @@ func (c *MemoryCache) Get(key string) ([]byte, error) {
 		c.removeItem(item)
 		return nil, ErrNotFound
 	}
-	// 移到 LRU 前端
 	c.lru.MoveToFront(item.lruElem)
-	return gzipDecompress(item.value)
+	raw, err := gzipDecompress(item.value)
+	if err != nil {
+		return nil, err
+	}
+	return bytesToAny(raw)
 }
 
-// Set 设置缓存，存储前 gzip 压缩
-func (c *MemoryCache) Set(key string, value []byte, ttl time.Duration) error {
-	compressed, err := gzipCompress(value)
+// GetInto 获取并反序列化到 dest
+func (c *MemoryCache) GetInto(key string, dest any) error {
+	v, err := c.Get(key)
+	if err != nil {
+		return err
+	}
+	// 通过 json  roundtrip 实现 any -> dest
+	data, err := valueToBytes(v)
+	if err != nil {
+		return err
+	}
+	return bytesToValue(data, dest)
+}
+
+// Set 设置缓存，序列化后 gzip 压缩存储
+func (c *MemoryCache) Set(key string, value any, ttl time.Duration) error {
+	raw, err := valueToBytes(value)
+	if err != nil {
+		return err
+	}
+	compressed, err := gzipCompress(raw)
 	if err != nil {
 		return err
 	}

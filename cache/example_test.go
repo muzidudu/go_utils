@@ -16,14 +16,14 @@ func ExampleNewMemoryCache() {
 	defer c.Close()
 
 	// 存储前自动 gzip 压缩
-	if err := c.Set("user:1", []byte(`{"name":"alice","age":30}`), 0); err != nil {
+	if err := c.Set("user:1", `{"name":"alice","age":30}`, 0); err != nil {
 		log.Fatal(err)
 	}
 	data, err := c.Get("user:1")
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("got %s\n", string(data))
+	fmt.Printf("got %s\n", data.(string))
 	// Output: got {"name":"alice","age":30}
 }
 
@@ -42,8 +42,8 @@ func ExampleNewCacheFactory() {
 	})
 	defer f.Close()
 
-	f.Set("key", []byte("value"), time.Minute)
+	f.Set("key", "value", time.Minute)
 	data, _ := f.Get("key")
-	fmt.Printf("redis=%v data=%s\n", f.IsRedis(), string(data))
+	fmt.Printf("redis=%v data=%s\n", f.IsRedis(), data.(string))
 	// Output: redis=false data=value
 }

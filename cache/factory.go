@@ -81,12 +81,17 @@ func (f *CacheFactory) TryRedis(cfg RedisConfig) bool {
 }
 
 // Get 获取缓存
-func (f *CacheFactory) Get(key string) ([]byte, error) {
+func (f *CacheFactory) Get(key string) (any, error) {
 	return f.Cache().Get(key)
 }
 
+// GetInto 获取并反序列化到 dest
+func (f *CacheFactory) GetInto(key string, dest any) error {
+	return f.Cache().GetInto(key, dest)
+}
+
 // Set 设置缓存
-func (f *CacheFactory) Set(key string, value []byte, ttl time.Duration) error {
+func (f *CacheFactory) Set(key string, value any, ttl time.Duration) error {
 	return f.Cache().Set(key, value, ttl)
 }
 

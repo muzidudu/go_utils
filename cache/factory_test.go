@@ -18,14 +18,14 @@ func TestCacheFactory_FallbackToMemory(t *testing.T) {
 	if f.IsRedis() {
 		t.Error("expected fallback to memory")
 	}
-	if err := f.Set("k1", []byte("v1"), 0); err != nil {
+	if err := f.Set("k1", "v1", 0); err != nil {
 		t.Fatal(err)
 	}
 	got, err := f.Get("k1")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if string(got) != "v1" {
+	if got.(string) != "v1" {
 		t.Errorf("got %q", got)
 	}
 }
@@ -36,9 +36,9 @@ func TestCacheFactory_MemoryOnly(t *testing.T) {
 	})
 	defer f.Close()
 
-	f.Set("a", []byte("1"), 0)
+	f.Set("a", "1", 0)
 	got, _ := f.Get("a")
-	if string(got) != "1" {
+	if got.(string) != "1" {
 		t.Errorf("got %q", got)
 	}
 }

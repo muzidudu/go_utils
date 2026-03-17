@@ -23,8 +23,8 @@ f := cache.NewCacheFactory(cache.FactoryConfig{
 defer f.Close()
 
 // Redis 可用用 Redis，不可用自动降级内存
-f.Set("key", []byte("value"), time.Minute)
-data, _ := f.Get("key")
+f.Set("key", "value", time.Minute)
+data, _ := f.Get("key")  // data 为 any，可按需类型断言
 ```
 
 ## 内存缓存 (MemoryCache)
@@ -38,7 +38,7 @@ c := cache.NewMemoryCache(cache.MemoryConfig{
     MaxCount: 1000,
     MaxBytes: 10 * 1024 * 1024,
 })
-c.Set("key", []byte("value"), 0)
+c.Set("key", "value", 0)
 ```
 
 ## Redis 缓存 (RedisCache)
@@ -54,7 +54,7 @@ c, _ := cache.NewRedisCache(cache.RedisConfig{
     DB:       0,
     Prefix:   "app:",
 })
-c.Set("key", []byte("value"), time.Minute)
+c.Set("key", "value", time.Minute)
 n, _ := c.DeleteByPrefix("user:")  // 删除 user: 开头的所有 key
 ```
 
@@ -62,8 +62,9 @@ n, _ := c.DeleteByPrefix("user:")  // 删除 user: 开头的所有 key
 
 ```go
 type Cache interface {
-    Get(key string) ([]byte, error)
-    Set(key string, value []byte, ttl time.Duration) error
+    Get(key string) (any, error)
+    Set(key string, value any, ttl time.Duration) error
+    GetInto(key string, dest any) error  // 反序列化到目标对象
     Delete(key string) error
     Exists(key string) (bool, error)
     Close() error

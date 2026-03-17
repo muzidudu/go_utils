@@ -49,8 +49,8 @@ func (r *RedisCache) fullKey(key string) string {
 	return r.prefix + key
 }
 
-// Get 获取缓存，自动解压
-func (r *RedisCache) Get(key string) ([]byte, error) {
+// Get 获取缓存，自动解压并反序列化
+func (r *RedisCache) Get(key string) (any, error) {
 	data, err := r.client.Get(r.ctx, r.fullKey(key)).Bytes()
 	if err == redis.Nil {
 		return nil, ErrNotFound
@@ -58,12 +58,33 @@ func (r *RedisCache) Get(key string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return gzipDecompress(data)
+	raw, err := gzipDecompress(data)
+	if err != nil {
+		return nil, err
+	}
+	return bytesToAny(raw)
 }
 
-// Set 设置缓存，存储前 gzip 压缩
-func (r *RedisCache) Set(key string, value []byte, ttl time.Duration) error {
-	compressed, err := gzipCompress(value)
+// GetInto 获取并反序列化到 dest
+func (r *RedisCache) GetInto(key string, dest any) error {
+	v, err := r.Get(key)
+	if err != nil {
+		return err
+	}
+	data, err := valueToBytes(v)
+	if err != nil {
+		return err
+	}
+	return bytesToValue(data, dest)
+}
+
+// Set 设置缓存，序列化后 gzip 压缩存储
+func (r *RedisCache) Set(key string, value any, ttl time.Duration) error {
+	raw, err := valueToBytes(value)
+	if err != nil {
+		return err
+	}
+	compressed, err := gzipCompress(raw)
 	if err != nil {
 		return err
 	}
