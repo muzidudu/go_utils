@@ -5,14 +5,33 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/muzidudu/go_utils/fiber/bootstrap"
 	"github.com/muzidudu/go_utils/fiber/internal/handlers"
-	middleware "github.com/muzidudu/go_utils/fiber/internal/middlewares"
+	middleware "github.com/muzidudu/go_utils/fiber/internal/middleware"
 	"github.com/muzidudu/go_utils/fiber/internal/sites"
 )
 
-// InstallHTTPRoutes 注册 HTTP 页面路由
-func InstallHTTPRoutes(app *bootstrap.App) {
+type HTTPRoute struct{}
+
+func NewHTTPRoute() *HTTPRoute {
+	return &HTTPRoute{}
+}
+
+// InstallRouter 注册 HTTP 页面路由
+func (h *HTTPRoute) InstallRouter(app *bootstrap.App) {
+
 	f := app.Fiber
 	f.Use(middleware.SiteMiddleware())
+	// HTML压缩中间件（仅压缩HTML响应）
+	f.Use(middleware.HTMLMinify(middleware.HTMLMinifyConfig{
+		Skip: func(c fiber.Ctx) bool {
+			// 跳过管理后台和API
+			// return strings.HasPrefix(c.Path(), config.AppConfig.Admin.Path) || strings.HasPrefix(c.Path(), "/api")
+			return false
+		},
+
+		RemoveComments:  true,
+		MinifyInlineCSS: true,
+		MinifyInlineJS:  true,
+	}))
 
 	// 健康检查
 	f.Get("/health", func(c fiber.Ctx) error {

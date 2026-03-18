@@ -11,8 +11,14 @@ import (
 	"github.com/muzidudu/go_utils/fiber/internal/handlers"
 )
 
-// InstallAPIRoutes 注册 API 路由
-func InstallAPIRoutes(app *bootstrap.App) {
+type APIRoute struct{}
+
+func NewAPIRoute() *APIRoute {
+	return &APIRoute{}
+}
+
+// InstallRouter 注册 API 路由
+func (h *APIRoute) InstallRouter(app *bootstrap.App) {
 	f := app.Fiber
 	api := f.Group("/api")
 

@@ -25,17 +25,22 @@ func New(configPath string) (*App, error) {
 	}
 	configPath = filepath.Clean(configPath)
 
+	// 初始化配置
 	cfg, err := initConfig(configPath)
 	if err != nil {
 		return nil, err
 	}
 
+	// 初始化缓存
 	c, err := initCache(cfg)
 	if err != nil {
 		return nil, err
 	}
 
+	// 初始化数据库
 	db := initDatabase(cfg)
+
+	// 初始化 Fiber
 	f := initFiber(cfg)
 
 	return &App{

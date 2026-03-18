@@ -12,7 +12,6 @@ import (
 // 使用: engine.RegisterTag("uppercase", template.TagUppercaseParser)
 // 模板: {% uppercase %}hello{% enduppercase %} -> HELLO
 
-// tagUppercaseNode 实现 INodeTag
 type tagUppercaseNode struct {
 	body pongo2.INode
 }
@@ -29,6 +28,7 @@ func (n *tagUppercaseNode) Execute(ctx *pongo2.ExecutionContext, writer pongo2.T
 	return nil
 }
 
+// TagUppercaseParser 解析 uppercase 标签
 func TagUppercaseParser(doc *pongo2.Parser, start *pongo2.Token, arguments *pongo2.Parser) (pongo2.INodeTag, *pongo2.Error) {
 	wrapper, endargs, err := doc.WrapUntilTag("enduppercase")
 	if err != nil {

@@ -72,7 +72,6 @@ func getThemeFromBinding(binding interface{}) string {
 	if binding == nil {
 		return "default"
 	}
-	// 尝试 map 类型
 	val := reflect.ValueOf(binding)
 	if val.Kind() == reflect.Ptr && !val.IsNil() {
 		val = val.Elem()
@@ -115,7 +114,6 @@ func getThemeFromBinding(binding interface{}) string {
 
 // Load 加载所有站点的模板
 func (e *SitesEngine) Load() error {
-	// 注册自定义 tag（仅一次）
 	e.tagsRegMu.Lock()
 	if !e.tagsRegistered && len(e.tagParsers) > 0 {
 		for _, tp := range e.tagParsers {
@@ -133,11 +131,9 @@ func (e *SitesEngine) Load() error {
 	templateDir := filepath.Join(baseDir, "template")
 	pongo2.SetAutoescape(e.autoEscape)
 
-	// 遍历 template 子目录（每个 theme 一个目录）
 	entries, err := os.ReadDir(templateDir)
 	if err != nil {
 		if os.IsNotExist(err) {
-			// 兼容：若无 template 子目录，使用 baseDir 作为 default
 			return e.loadTheme(baseDir, "default")
 		}
 		return fmt.Errorf("read template dir: %w", err)
@@ -154,7 +150,6 @@ func (e *SitesEngine) Load() error {
 		}
 	}
 
-	// 若无任何 theme，尝试加载 baseDir 作为 default
 	if len(e.Templates) == 0 {
 		return e.loadTheme(baseDir, "default")
 	}
@@ -193,7 +188,7 @@ func (e *SitesEngine) loadTheme(themePath, theme string) error {
 		}
 		e.Templates[key] = tmpl
 		if e.Verbose {
-			log.Printf("views: parsed template: %s\n", key)
+			log.Printf("template: parsed %s", key)
 		}
 		return nil
 	}
@@ -224,7 +219,6 @@ func (e *SitesEngine) Render(out io.Writer, name string, binding interface{}, la
 	e.Mutex.RUnlock()
 
 	if !ok {
-		// 回退到 default
 		if theme != "default" {
 			nameKey = "default/" + name
 			e.Mutex.RLock()
