@@ -11,6 +11,14 @@ type Config struct {
 	Server   ServerConfig   `mapstructure:"server"`
 	Database DatabaseConfig `mapstructure:"database"`
 	Cache    CacheConfig    `mapstructure:"cache"`
+	Site     AppSiteConfig  `mapstructure:"site"`
+}
+
+// AppSiteConfig 站点相关配置（Bot、关键词等）
+type AppSiteConfig struct {
+	BotUserAgents []string `mapstructure:"bot_user_agents"`
+	SiteWords     []string `mapstructure:"site_words"`
+	SiteKeywords  []string `mapstructure:"site_keywords"`
 }
 
 type ServerConfig struct {

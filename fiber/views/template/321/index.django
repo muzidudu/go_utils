@@ -1,0 +1,10 @@
+<h1 style="color: red;">这个是321站点</h1>
+<p>全局调用: Config, Cache, DB, Fiber</p>
+<p>分层: Handler → Service → Repository，DTO 隔离 Model</p>
+<p>模板: Django (Pongo2)</p>
+<p>中间件: logger, compress</p>
+<p>站点域名: {{ siteBase.Domain}} </p>
+<p>站点名称: {{ siteBase.Name}}</p>
+<p>站点ID: {{ MySite.ID}}</p>
+<p>模板: {{ Theme }}</p>
+<p>模板路径: {{ ThemePath }}</p>

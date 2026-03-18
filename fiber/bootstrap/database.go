@@ -26,3 +26,11 @@ func initDatabase(cfg *Config) *gorm.DB {
 	}
 	return db
 }
+
+// AutoMigrate 自动迁移模型（传入需迁移的模型指针）
+func AutoMigrate(db *gorm.DB, models ...any) error {
+	if db == nil {
+		return nil
+	}
+	return db.AutoMigrate(models...)
+}

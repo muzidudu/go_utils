@@ -1,0 +1,10 @@
+<h1>用户列表</h1>
+{% if users %}
+<ul>
+{% for u in users %}
+    <li>{{ u.Name }} ({{ u.Email }})</li>
+{% endfor %}
+</ul>
+{% else %}
+<p>暂无用户</p>
+{% endif %}

@@ -36,7 +36,7 @@ func New(configPath string) (*App, error) {
 	}
 
 	db := initDatabase(cfg)
-	f := initFiber()
+	f := initFiber(cfg)
 
 	return &App{
 		Config: cfg,
@@ -52,4 +52,9 @@ func (a *App) Close() error {
 		_ = a.Cache.Close()
 	}
 	return nil
+}
+
+// Migrate 执行数据库迁移（传入需迁移的模型）
+func (a *App) Migrate(models ...any) error {
+	return AutoMigrate(a.DB, models...)
 }
