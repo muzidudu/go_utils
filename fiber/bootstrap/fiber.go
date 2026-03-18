@@ -1,8 +1,6 @@
 package bootstrap
 
 import (
-	"path/filepath"
-
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/compress"
 	"github.com/gofiber/fiber/v3/middleware/favicon"
@@ -14,8 +12,7 @@ import (
 // initFiber 创建 Fiber 应用（多站点 Pongo2 模板、compress、logger 中间件）
 func initFiber(cfg *Config) *fiber.App {
 	// 多站点 Pongo2 模板引擎，支持 RegisterTag
-	templateDir := filepath.Join("views")
-	engine := template.New(templateDir, ".django")
+	engine := template.New("./views", ".django")
 	engine.Reload(true)
 	engine.Debug(false)
 	// 注册自定义 tag 示例：engine.RegisterTag("uppercase", template.TagUppercaseParser)

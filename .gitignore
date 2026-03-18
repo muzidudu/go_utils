@@ -41,6 +41,7 @@ go.work
 
 # Build
 dist/
+deploy/
 build/
 fiber_app
 
