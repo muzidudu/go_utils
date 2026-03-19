@@ -4,7 +4,7 @@ import "github.com/muzidudu/go_utils/fiber/bootstrap"
 
 // InstallRouter 安装所有路由到应用
 func InstallRouter(app *bootstrap.App) {
-	setup(app, NewAPIRoute(), NewHTTPRoute())
+	setup(app, NewAPIRoute(), NewHTTPRoute(), NewAdminRoute())
 }
 
 // setup 安装路由

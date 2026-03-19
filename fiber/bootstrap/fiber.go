@@ -3,6 +3,7 @@ package bootstrap
 import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/compress"
+	"github.com/gofiber/fiber/v3/middleware/cors"
 	"github.com/gofiber/fiber/v3/middleware/favicon"
 	"github.com/gofiber/fiber/v3/middleware/logger"
 	"github.com/gofiber/fiber/v3/middleware/recover"
@@ -25,6 +26,7 @@ func initFiber(cfg *Config) *fiber.App {
 	})
 
 	// 中间件
+	app.Use(cors.New()) // 允许后台管理跨域调用 API
 	app.Use(logger.New())
 	app.Use(compress.New(compress.Config{
 		Level: compress.LevelBestSpeed,

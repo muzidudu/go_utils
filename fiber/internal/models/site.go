@@ -16,6 +16,7 @@ type Site struct {
 	DeletedAt  gorm.DeletedAt `gorm:"index" json:"-"`
 	Name       string         `gorm:"size:100;not null" json:"name"`
 	Domain     string         `gorm:"size:255;uniqueIndex;not null" json:"domain"`
+	Bind       uint           `gorm:"default:0;index" json:"bind"` // 绑定分类菜单ID
 	Subdomains []string       `gorm:"serializer:json" json:"subdomains"`
 	Template   string         `gorm:"size:50;default:default" json:"template"`
 	IsDefault  bool           `gorm:"default:false" json:"is_default"`

@@ -4,9 +4,9 @@ package routes
 import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/muzidudu/go_utils/fiber/bootstrap"
+	"github.com/muzidudu/go_utils/fiber/internal/data"
 	"github.com/muzidudu/go_utils/fiber/internal/handlers"
 	middleware "github.com/muzidudu/go_utils/fiber/internal/middleware"
-	"github.com/muzidudu/go_utils/fiber/internal/sites"
 )
 
 type HTTPRoute struct{}
@@ -38,17 +38,19 @@ func (h *HTTPRoute) InstallRouter(app *bootstrap.App) {
 		return c.JSON(fiber.Map{"status": "ok"})
 	})
 
-	// 首页（Django 模板）
+	// 首页（Django 模板）- 示例：全局调用 sites 和 categories
 	f.Get("/", func(c fiber.Ctx) error {
-
-		site := sites.GetSiteByDomain(c.Host())
+		// 全局调用：sites 和 categories
+		site := data.GetSiteByDomain(c.Host())
 		if site == nil {
-			site = sites.GetDefaultSite()
+			site = data.GetDefaultSite()
 		}
+		categoryTree, _ := data.GetCategoryTree(0)
 
 		return c.Render("index", fiber.Map{
-			"Title":  "Fiber App",
-			"MySite": site,
+			"Title":        "Fiber App",
+			"MySite":       site,
+			"CategoryTree": categoryTree,
 		}, "layouts/main")
 	})
 

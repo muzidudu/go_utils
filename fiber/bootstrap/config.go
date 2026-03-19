@@ -9,6 +9,7 @@ import (
 // Config 应用配置
 type Config struct {
 	Server   ServerConfig   `mapstructure:"server"`
+	Admin    AdminConfig    `mapstructure:"admin"`
 	Database DatabaseConfig `mapstructure:"database"`
 	Cache    CacheConfig    `mapstructure:"cache"`
 	Site     AppSiteConfig  `mapstructure:"site"`
@@ -21,6 +22,13 @@ type AppSiteConfig struct {
 	SiteKeywords  []string `mapstructure:"site_keywords"`
 }
 
+type AdminConfig struct {
+	AdminPath string `mapstructure:"admin_path"`
+	Username  string `mapstructure:"username"`
+	Password  string `mapstructure:"password"`
+	Realm     string `mapstructure:"realm"`
+}
+
 type ServerConfig struct {
 	Host  string `mapstructure:"host"`
 	Port  int    `mapstructure:"port"`
@@ -28,12 +36,14 @@ type ServerConfig struct {
 }
 
 type DatabaseConfig struct {
+	Driver   string `mapstructure:"driver"` // postgres | mysql | sqlite
 	Host     string `mapstructure:"host"`
 	Port     int    `mapstructure:"port"`
 	User     string `mapstructure:"user"`
 	Password string `mapstructure:"password"`
 	Database string `mapstructure:"database"`
-	SSLMode  string `mapstructure:"sslmode"`
+	Path     string `mapstructure:"path"`    // SQLite 文件路径，如 data/app.db
+	SSLMode  string `mapstructure:"sslmode"` // 仅 postgres 使用
 }
 
 type CacheConfig struct {
@@ -59,12 +69,13 @@ type MemoryCacheConfig struct {
 func initConfig(configPath string) (*Config, error) {
 	mgr := configmgr.NewFromPath(configPath)
 	if err := mgr.LoadOrInitWithDefaults(map[string]any{
-		"server.host":   "0.0.0.0",
-		"server.port":   3000,
-		"server.debug":  false,
-		"database.host": "localhost",
-		"database.port": 5432,
-		"database.user": "postgres",
+		"server.host":     "0.0.0.0",
+		"server.port":     3000,
+		"server.debug":    false,
+		"database.driver": "postgres",
+		"database.host":   "localhost",
+		"database.port":   5432,
+		"database.user":   "postgres",
 	}); err != nil {
 		return nil, fmt.Errorf("load config: %w", err)
 	}

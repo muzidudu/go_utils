@@ -65,4 +65,14 @@ func (h *APIRoute) InstallRouter(app *bootstrap.App) {
 	api.Post("/sites", handlers.Site.Create)
 	api.Put("/sites/:id", handlers.Site.Update)
 	api.Delete("/sites/:id", handlers.Site.Delete)
+
+	// 分类 API（多级，支持树形/扁平）
+	api.Get("/categories/tree", handlers.Category.ListTree)
+	api.Get("/categories/flat", handlers.Category.ListFlat)
+	api.Get("/categories/:id", handlers.Category.GetByID)
+	api.Post("/categories", handlers.Category.Create)
+	api.Put("/categories/:id", handlers.Category.Update)
+	api.Delete("/categories/:id", handlers.Category.Delete)
+
+	api.Get("/templates", handlers.Template.ListTemplates)
 }

@@ -15,13 +15,13 @@ import (
 
 const (
 	siteListKey  = "site:list"
-	siteCacheTTL = 10 * time.Minute
+	siteCacheTTL = 12 * time.Hour
 )
 
 func siteIDKey(id uint) string { return fmt.Sprintf("site:id:%d", id) }
 
 var (
-	siteMemCache cache.Cache
+	siteMemCache  cache.Cache
 	siteCacheOnce sync.Once
 )
 

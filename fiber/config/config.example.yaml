@@ -4,11 +4,13 @@ server:
   debug: false
 
 database:
+  driver: postgres   # postgres | mysql | sqlite
   host: localhost
   port: 5432
   user: postgres
   password: postgres
   database: app
+  # path: data/app.db  # sqlite 时使用，driver=sqlite 时必填或使用 database 作为文件路径
   sslmode: disable
 
 cache:

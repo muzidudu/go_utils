@@ -69,6 +69,7 @@ func (s *SitesService) Create(req dto.CreateSiteReq) (*dto.SiteResp, error) {
 	site := &models.Site{
 		Name:       req.Name,
 		Domain:     req.Domain,
+		Bind:       req.Bind,
 		Subdomains: req.Subdomains,
 		Template:   template,
 		IsDefault:  req.IsDefault,
@@ -92,6 +93,9 @@ func (s *SitesService) Update(id uint, req dto.UpdateSiteReq) (*dto.SiteResp, er
 	}
 	if req.Domain != nil {
 		site.Domain = *req.Domain
+	}
+	if req.Bind != nil {
+		site.Bind = *req.Bind
 	}
 	if req.Subdomains != nil {
 		site.Subdomains = *req.Subdomains
@@ -131,6 +135,7 @@ func siteToResp(s *models.Site) dto.SiteResp {
 		ID:         s.ID,
 		Name:       s.Name,
 		Domain:     s.Domain,
+		Bind:       s.Bind,
 		Subdomains: s.Subdomains,
 		Template:   s.Template,
 		IsDefault:  s.IsDefault,

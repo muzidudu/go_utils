@@ -31,7 +31,7 @@ func main() {
 	app.Set(a)
 
 	// 4. 数据库自动迁移
-	if err := a.Migrate(&models.User{}, &models.Site{}); err != nil {
+	if err := a.Migrate(&models.User{}, &models.Site{}, &models.Category{}); err != nil {
 		log.Printf("warn: migrate: %v", err)
 	}
 

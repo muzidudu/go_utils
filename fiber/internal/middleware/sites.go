@@ -6,8 +6,8 @@ import (
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/muzidudu/go_utils/fiber/internal/app"
+	"github.com/muzidudu/go_utils/fiber/internal/data"
 	"github.com/muzidudu/go_utils/fiber/internal/models"
-	"github.com/muzidudu/go_utils/fiber/internal/sites"
 	"github.com/muzidudu/go_utils/fiber/pkg/utils"
 )
 
@@ -141,10 +141,10 @@ func SiteMiddleware() fiber.Handler {
 		}
 
 		// 获取请求的 Host
-		host := sites.GetHostFromRequest(c)
-		site := sites.GetSiteByDomain(host)
+		host := data.GetHostFromRequest(c)
+		site := data.GetSiteByDomain(host)
 		if site == nil {
-			site = sites.GetDefaultSite()
+			site = data.GetDefaultSite()
 		}
 
 		// 注意：由于中间件在路由匹配之前执行，无法使用 c.Params() 获取路由参数
@@ -252,14 +252,18 @@ func SiteMiddleware() fiber.Handler {
 			// seed := utils.PathToSeed(c.OriginalURL())
 			// keywords := utils.GetRandomWords(config.AppConfig.Site.SiteKeywords, 40, false, int64(site.ID), seed)
 
+			// 全局调用：分类树供模板使用（如侧边栏导航）
+			categoryTree, _ := data.GetCategoryTree(0)
+
 			binding := fiber.Map{
-				"ctx":        c,
-				"siteBase":   site,
-				"siteID":     site.ID,
-				"ThemePath":  "template/" + site.Template,
-				"Theme":      site.Template,
-				"params":     pageInfo,
-				"categoryID": categoryID,
+				"ctx":          c,
+				"siteBase":     site,
+				"siteID":       site.ID,
+				"ThemePath":    "template/" + site.Template,
+				"Theme":        site.Template,
+				"params":       pageInfo,
+				"categoryID":   categoryID,
+				"CategoryTree": categoryTree,
 			}
 			c.ViewBind(binding)
 		}
@@ -274,7 +278,7 @@ func getDomainNames(c fiber.Ctx) []fiber.Map {
 		return nil
 	}
 	seed := utils.PathToSeed(c.OriginalURL())
-	allSites := sites.GetAllSites()
+	allSites := data.GetAllSites()
 
 	type domainInfo struct {
 		domain string
@@ -323,5 +327,5 @@ func GetSite(c fiber.Ctx) *models.Site {
 	if site, ok := c.Locals("site").(*models.Site); ok {
 		return site
 	}
-	return sites.GetDefaultSite()
+	return data.GetDefaultSite()
 }
