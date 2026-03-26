@@ -125,30 +125,34 @@ cat, _ := data.GetCategoryByID(1)
 
 ## 分层架构
 
-| 层 | 职责 |
-|----|------|
-| **Handler** | 接收/解析请求，参数校验，调用 Service |
-| **Service** | 业务逻辑处理 |
-| **Repository** | 数据库读写（纯 CRUD，不写业务） |
-| **Model** | 数据库结构体 |
-| **DTO** | 请求/响应结构（隔离 Model） |
-| **Router** | 注册路由，绑定 Handler |
+
+| 层              | 职责                      |
+| -------------- | ----------------------- |
+| **Handler**    | 接收/解析请求，参数校验，调用 Service |
+| **Service**    | 业务逻辑处理                  |
+| **Repository** | 数据库读写（纯 CRUD，不写业务）      |
+| **Model**      | 数据库结构体                  |
+| **DTO**        | 请求/响应结构（隔离 Model）       |
+| **Router**     | 注册路由，绑定 Handler         |
+
 
 ## API 路由
 
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| GET | `/api/sites` | 站点列表 |
-| GET | `/api/sites/:id` | 站点详情 |
-| POST | `/api/sites` | 创建站点 |
-| PUT | `/api/sites/:id` | 更新站点 |
-| DELETE | `/api/sites/:id` | 删除站点 |
-| GET | `/api/categories/tree?parent_id=0` | 分类树 |
-| GET | `/api/categories/flat?parent_id=0` | 分类扁平列表 |
-| GET | `/api/categories/:id` | 分类详情 |
-| POST | `/api/categories` | 创建分类 |
-| PUT | `/api/categories/:id` | 更新分类 |
-| DELETE | `/api/categories/:id` | 删除分类 |
+
+| 方法     | 路径                                 | 说明     |
+| ------ | ---------------------------------- | ------ |
+| GET    | `/api/sites`                       | 站点列表   |
+| GET    | `/api/sites/:id`                   | 站点详情   |
+| POST   | `/api/sites`                       | 创建站点   |
+| PUT    | `/api/sites/:id`                   | 更新站点   |
+| DELETE | `/api/sites/:id`                   | 删除站点   |
+| GET    | `/api/categories/tree?parent_id=0` | 分类树    |
+| GET    | `/api/categories/flat?parent_id=0` | 分类扁平列表 |
+| GET    | `/api/categories/:id`              | 分类详情   |
+| POST   | `/api/categories`                  | 创建分类   |
+| PUT    | `/api/categories/:id`              | 更新分类   |
+| DELETE | `/api/categories/:id`              | 删除分类   |
+
 
 ## 扩展路由
 
@@ -170,3 +174,4 @@ npm run dev  # http://localhost:5173
 
 - Go 1.25+
 - 可选：PostgreSQL / MySQL / SQLite、Redis（不配置则使用内存缓存、无 DB）
+
