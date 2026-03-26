@@ -69,7 +69,7 @@ flowchart TD
 ## 依赖与安装
 
 ```go
-go get github.com/muzidudu/go_utils/sitemiddleware
+go get github.com/muzidudu/go_utils/sitesmiddleware
 ```
 
 需 **Go 1.18+**（泛型）。
@@ -77,7 +77,7 @@ go get github.com/muzidudu/go_utils/sitemiddleware
 在业务项目中使用本仓库的本地副本时，可在 `go.mod` 中增加：
 
 ```go
-replace github.com/muzidudu/go_utils/sitemiddleware => ../path/to/go_utils/sitemiddleware
+replace github.com/muzidudu/go_utils/sitesmiddleware => ../path/to/go_utils/sitesmiddleware
 ```
 
 ---
