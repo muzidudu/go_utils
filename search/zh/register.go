@@ -48,7 +48,8 @@ func tokenizerConstructor(config map[string]interface{}, _ *registry.Cache) (ana
 
 func dictFilesFromConfig(config map[string]interface{}) ([]string, error) {
 	raw, ok := config["dict_files"]
-	if !ok {
+	if !ok || raw == nil {
+		// 新建 mapping 时可能省略；索引 JSON 反序列化后常为 null，均表示使用 gse 默认词典
 		return nil, nil
 	}
 	switch v := raw.(type) {

@@ -90,7 +90,7 @@ m, err := zh.NewHighlightableMapping(
 )
 ```
 
-词典加载与路径规则以 [gse 文档](https://github.com/go-ego/gse) 为准；首次运行默认词典时，gse 可能向标准输出打印加载日志。
+词典加载与路径规则以 [gse 文档](https://github.com/go-ego/gse) 为准；首次运行默认词典时，gse 可能向标准输出打印加载日志。未使用 `WithDict` 时，索引里持久化的 `dict_files` 为 JSON `null`，打开索引时必须按「无自定义词典」解析（本库已处理）。
 
 ## 高亮
 
