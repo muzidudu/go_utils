@@ -9,6 +9,7 @@
 - **批量操作**：Batch 批量索引、DeleteBatch 批量删除
 - **分页与排序**：From/Size 分页，Sort 多字段排序
 - **Scorch 索引**：可选 scorch 存储以获得更好性能
+- **中文分词（可选）**：子包 [`search/zh`](./zh/) 基于 [gse](https://github.com/go-ego/gse)，映射与 `NewHighlightableMapping` 一致并兼容高亮
 
 ## 安装
 
@@ -212,9 +213,28 @@ for _, hit := range result.Hits {
 ```go
 fieldMapping := bleve.NewTextFieldMapping()
 fieldMapping.Store = true
-fieldMapping.IncludeTermVectors = true
-docMapping.AddFieldMappingsAt("content", fieldMapping)
+	fieldMapping.IncludeTermVectors = true
+	docMapping.AddFieldMappingsAt("content", fieldMapping)
 ```
+
+## 中文分词（search/zh）
+
+面向中文正文时，可使用子包 `search/zh` 生成带 **gse 分词** 的索引映射（分析器名 `zh_gse`），仍通过 `search.NewUsing`、`search.Search`、高亮等 API 使用。
+
+```go
+import "github.com/muzidudu/go_utils/search/zh"
+
+m, err := zh.NewHighlightableMapping()
+if err != nil {
+	log.Fatal(err)
+}
+engine, err := search.NewUsing(search.Config{
+	Path:    "data/zh.bleve",
+	Mapping: m,
+})
+```
+
+**说明**：该映射已将索引的 `DefaultAnalyzer` 设为与 `title`/`content` 相同的 `zh_gse`，避免未带字段的 `Match()` 仍按英文默认分析器分词。可选参数、高亮注意与分词边界见 **[search/zh 使用说明](./zh/README.md)**。
 
 ## 删除文档
 
@@ -258,6 +278,7 @@ engine, err := search.New(search.Config{
 ## 依赖
 
 - `github.com/blevesearch/bleve/v2`
+- 使用中文分词子包时另需 `github.com/go-ego/gse`（已作为 `search` 模块传递依赖）
 
 ## License
 

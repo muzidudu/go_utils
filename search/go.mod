@@ -2,7 +2,10 @@ module github.com/muzidudu/go_utils/search
 
 go 1.25.0
 
-require github.com/blevesearch/bleve/v2 v2.4.0
+require (
+	github.com/blevesearch/bleve/v2 v2.4.0
+	github.com/go-ego/gse v1.0.2
+)
 
 require (
 	github.com/RoaringBitmap/roaring v1.2.3 // indirect
@@ -29,6 +32,7 @@ require (
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/json-iterator/go v0.0.0-20171115153421-f7279a603ede // indirect
 	github.com/mschoch/smat v0.2.0 // indirect
+	github.com/vcaesar/cedar v0.30.0 // indirect
 	go.etcd.io/bbolt v1.3.7 // indirect
 	golang.org/x/sys v0.13.0 // indirect
 )
