@@ -144,6 +144,16 @@ func (c *MemoryCache) Close() error {
 	return nil
 }
 
+// BuildKey 构建缓存键，语义同包函数 BuildKey。
+func (_ *MemoryCache) BuildKey(prefix string, parts ...interface{}) string {
+	return BuildKey(prefix, parts...)
+}
+
+// BuildQueryKey 构建查询参数缓存键，语义同包函数 BuildQueryKey。
+func (_ *MemoryCache) BuildQueryKey(prefix string, params interface{}) string {
+	return BuildQueryKey(prefix, params)
+}
+
 // Stats 返回统计信息
 func (c *MemoryCache) Stats() (count int, bytes int64) {
 	c.mu.RLock()

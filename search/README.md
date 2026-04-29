@@ -280,6 +280,13 @@ engine, err := search.New(search.Config{
 - `github.com/blevesearch/bleve/v2`
 - 使用中文分词子包时另需 `github.com/go-ego/gse`（已作为 `search` 模块传递依赖）
 
+## 同仓库：Redis 排行榜（rank）
+
+本模块负责 **Bleve 全文索引与搜索**；若还需要按 **搜索热词、浏览量** 等做**分日/分区间、可清理** 的统计排行，请使用同仓库中的 **[go_utils/rank](../rank/)**（基于 Redis `ZSET`，与本文职责分离）。
+
+- **安装**：`go get github.com/muzidudu/go_utils/rank`
+- **能力概要**：`rank.Store` 接口涵盖按自然日计分、多日合并 TopN、按 `keepTop` 裁剪、按 `before` 日期扫描清理等；时区、key 前缀由 `rank.Config` 配置。
+
 ## License
 
 与 go_utils 项目一致。

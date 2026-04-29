@@ -114,3 +114,13 @@ func (f *CacheFactory) Close() error {
 	}
 	return nil
 }
+
+// BuildKey 构建缓存键，语义与包函数 BuildKey 相同，便于在持有 CacheFactory 时链式使用。
+func (_ *CacheFactory) BuildKey(prefix string, parts ...interface{}) string {
+	return BuildKey(prefix, parts...)
+}
+
+// BuildQueryKey 基于查询参数构建缓存键，语义与包函数 BuildQueryKey 相同。
+func (_ *CacheFactory) BuildQueryKey(prefix string, params interface{}) string {
+	return BuildQueryKey(prefix, params)
+}

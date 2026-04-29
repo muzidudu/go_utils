@@ -107,6 +107,17 @@ m, err := zh.NewHighlightableMapping(
 - `github.com/blevesearch/bleve/v2`
 - `github.com/go-ego/gse`
 
+## 同仓库：搜索热词与排行榜（rank）
+
+`search` / `search/zh` 解决 **怎么搜、怎么高亮**；若还需要把用户真实检索词、文档 ID 的 **曝光与点击** 等做成 **按天、可区间、可清理** 的统计排行，请用同仓库的 **[go_utils/rank](../../rank/)**（Redis `ZSET`），与 Bleve 索引**独立存储**、职责分离。
+
+```bash
+go get github.com/muzidudu/go_utils/rank
+```
+
+- **常见用法**：把规范化后的**查询串**或 **文档类目标识** 作为 `rank` 的 `member` 做 `Incr` / `IncrOn`，用 `TimeSpec`（今天、最近 N 天、本周等）做 `TopN`；`keepTop` 与 `PruneTypeBefore` 控制体量与**沉积数据**清理。
+- **接口**：依赖注入时可用 `rank.Store`；更多说明见父包 [search/README.md](../README.md) 中 **「同仓库：Redis 排行榜（rank）」** 一节。
+
 ## License
 
 与 go_utils 项目一致。

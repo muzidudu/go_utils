@@ -42,3 +42,15 @@ func TestCacheFactory_MemoryOnly(t *testing.T) {
 		t.Errorf("got %q", got)
 	}
 }
+
+func TestCacheFactory_BuildKeyDelegates(t *testing.T) {
+	f := NewCacheFactory(FactoryConfig{Memory: &MemoryConfig{MaxCount: 10}})
+	defer f.Close()
+	if got, want := f.BuildKey("a", 1, "x"), BuildKey("a", 1, "x"); got != want {
+		t.Errorf("BuildKey got %q want %q", got, want)
+	}
+	params := map[string]string{"page": "1"}
+	if got, want := f.BuildQueryKey("list", params), BuildQueryKey("list", params); got != want {
+		t.Errorf("BuildQueryKey got %q want %q", got, want)
+	}
+}

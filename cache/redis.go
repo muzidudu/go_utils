@@ -121,6 +121,16 @@ func (r *RedisCache) Close() error {
 	return r.client.Close()
 }
 
+// BuildKey 构建缓存键，语义同包函数 BuildKey。
+func (_ *RedisCache) BuildKey(prefix string, parts ...interface{}) string {
+	return BuildKey(prefix, parts...)
+}
+
+// BuildQueryKey 构建查询参数缓存键，语义同包函数 BuildQueryKey。
+func (_ *RedisCache) BuildQueryKey(prefix string, params interface{}) string {
+	return BuildQueryKey(prefix, params)
+}
+
 // Client 返回底层 Redis 客户端
 func (r *RedisCache) Client() *redis.Client {
 	return r.client

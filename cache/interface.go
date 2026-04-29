@@ -15,4 +15,14 @@ type Cache interface {
 	Delete(key string) error
 	Exists(key string) (bool, error)
 	Close() error
+	// BuildKey 构建缓存键
+	BuildKey(prefix string, parts ...interface{}) string
+	// BuildQueryKey 构建查询参数缓存键
+	BuildQueryKey(prefix string, params interface{}) string
 }
+
+var (
+	_ Cache = (*MemoryCache)(nil)
+	_ Cache = (*RedisCache)(nil)
+	_ Cache = (*CacheFactory)(nil)
+)
