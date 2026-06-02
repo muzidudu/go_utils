@@ -22,9 +22,12 @@ type SitesEngine struct {
 	core.Engine
 	autoEscape     bool
 	Templates      map[string]*pongo2.Template // key: "theme/name"
-	tagParsers     []tagParser
-	tagsRegistered bool
-	tagsRegMu      sync.Mutex
+	tagParsers        []tagParser
+	tagsRegistered    bool
+	tagsRegMu         sync.Mutex
+	filterEntries     []filterEntry
+	filtersRegistered bool
+	filtersRegMu      sync.Mutex
 }
 
 type tagParser struct {
@@ -40,6 +43,7 @@ func New(baseDir, extension string) *SitesEngine {
 		Templates:  make(map[string]*pongo2.Template),
 		tagParsers: nil,
 	}
+	
 	e.Engine.Left = "{{"
 	e.Engine.Right = "}}"
 	e.Engine.Directory = baseDir
@@ -47,6 +51,7 @@ func New(baseDir, extension string) *SitesEngine {
 	e.Engine.LayoutName = "embed"
 	e.Engine.Funcmap = make(map[string]interface{})
 	e.autoEscape = true
+	e.initBuiltinFilters()
 	return e
 }
 
@@ -114,6 +119,10 @@ func getThemeFromBinding(binding interface{}) string {
 
 // Load 加载所有站点的模板
 func (e *SitesEngine) Load() error {
+	if err := e.registerFilters(); err != nil {
+		return err
+	}
+
 	e.tagsRegMu.Lock()
 	if !e.tagsRegistered && len(e.tagParsers) > 0 {
 		for _, tp := range e.tagParsers {
