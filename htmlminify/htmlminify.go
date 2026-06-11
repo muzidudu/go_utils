@@ -24,6 +24,8 @@ type HTMLMinifyConfig struct {
 	RemoveComments bool
 	// MinifySvg 是否压缩 SVG
 	MinifySvg bool
+	// KeepDocumentTags 为 true 时保留 html/head/body 文档结构标签（含 </body>、</html> 等结尾标签）
+	KeepDocumentTags bool
 }
 
 // HTMLMinify HTML压缩中间件
@@ -47,6 +49,7 @@ func HTMLMinify(config ...HTMLMinifyConfig) fiber.Handler {
 	htmlMinifier := &html.Minifier{
 		KeepSpecialComments: !cfg.RemoveComments, // 保留条件注释等特殊注释
 		KeepDefaultAttrVals: true,
+		KeepDocumentTags:    cfg.KeepDocumentTags,
 	}
 	m.Add("text/html", htmlMinifier)
 

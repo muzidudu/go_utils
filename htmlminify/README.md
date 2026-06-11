@@ -59,6 +59,7 @@ func main() {
 | `MinifyInlineJS` | `bool` | `false` | 是否压缩内联 JavaScript |
 | `RemoveComments` | `bool` | `true` | 为 `true` 时移除普通 HTML 注释；为 `false` 时保留条件注释等特殊注释（见下方） |
 | `MinifySvg` | `bool` | `false` | 是否压缩内联 SVG |
+| `KeepDocumentTags` | `bool` | `false` | 为 `true` 时保留 `html` / `head` / `body` 文档结构标签（含 `</body>`、`</html>` 结尾标签）；默认会去掉这些外层标签 |
 
 示例：跳过 `/debug`、开启内联 CSS/JS、保留注释：
 
@@ -73,10 +74,11 @@ app.Use(htmlminify.HTMLMinify(htmlminify.HTMLMinifyConfig{
 	Skip: func(c fiber.Ctx) bool {
 		return strings.HasPrefix(c.Path(), "/debug")
 	},
-	MinifyInlineCSS: true,
-	MinifyInlineJS:  true,
-	RemoveComments:  false,
-	MinifySvg:       true,
+	MinifyInlineCSS:  true,
+	MinifyInlineJS:   true,
+	RemoveComments:   false,
+	MinifySvg:        true,
+	KeepDocumentTags: true, // 保留 </body></html> 等文档结尾标签
 }))
 ```
 
@@ -86,6 +88,7 @@ app.Use(htmlminify.HTMLMinify(htmlminify.HTMLMinifyConfig{
 - **Content-Type**：仅处理包含 `text/html` 的 `Content-Type`。
 - **空响应**：正文为空时不处理。
 - **注释**：`RemoveComments: true` 时移除常规注释；底层 HTML minifier 仍可通过 `KeepSpecialComments` 保留 IE 条件注释等（与 `RemoveComments` 联动）。
+- **文档标签**：`KeepDocumentTags: true` 时保留完整文档骨架；默认压缩后可能只剩 `<!doctype html>` 与正文片段（无 `</body></html>`）。
 
 ## 许可证
 
