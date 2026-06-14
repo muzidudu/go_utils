@@ -6,7 +6,7 @@ import "github.com/gofiber/fiber/v3"
 type SiteBinding[S any] struct {
 	SetHost  func(s *S, host string)
 	SiteID   func(s *S) uint
-	Template func(s *S) string
+	Template func(s *S, c fiber.Ctx) string
 }
 
 // Options 站点中间件依赖；由应用层注入解析与工具函数。

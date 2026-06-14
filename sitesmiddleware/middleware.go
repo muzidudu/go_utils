@@ -60,7 +60,7 @@ func New[S any](opts Options[S]) fiber.Handler {
 			// 获取站点ID
 			siteID := b.SiteID(site)
 			// 获取站点模板
-			tmpl := b.Template(site)
+			tmpl := b.Template(site,c)
 			// 写入Locals
 			c.Locals("ctx", c)
 			// 写入site
