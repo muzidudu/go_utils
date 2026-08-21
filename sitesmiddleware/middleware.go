@@ -18,11 +18,13 @@ func New[S any](opts Options[S]) fiber.Handler {
 		// 判断是否为搜索引擎爬虫
 		isBot := IsSearchEngineBot(c, userAgent, opts.BotUserAgents)
 
+		skipRubbish := opts.SkipRubbishBotBlock
+		if opts.SkipRubbishBotBlockFn != nil {
+			skipRubbish = opts.SkipRubbishBotBlockFn()
+		}
 		// 垃圾/采集类爬虫拦截
-		if !opts.SkipRubbishBotBlock {
-			// 获取垃圾UA列表
+		if !skipRubbish {
 			rubbishList := rubbishListForRequest(c, opts.RubbishBotUserAgents)
-			// 如果UA命中垃圾列表，则返回403
 			if IsRubbishBotWithList(userAgent, rubbishList) {
 				return c.Status(fiber.StatusForbidden).SendString("Access denied")
 			}
@@ -32,8 +34,12 @@ func New[S any](opts Options[S]) fiber.Handler {
 		c.ViewBind(fiber.Map{
 			"isBot": isBot,
 		})
+		skipLang := opts.SkipLanguageCheck
+		if opts.SkipLanguageCheckFn != nil {
+			skipLang = opts.SkipLanguageCheckFn()
+		}
 		// 非爬虫且未跳过语言检查时，检查Accept-Language
-		if !isBot && !opts.SkipLanguageCheck {
+		if !isBot && !skipLang {
 			// 检查Accept-Language是否在允许列表中
 			allowed := opts.PreferredLanguageTags
 			if len(allowed) == 0 {

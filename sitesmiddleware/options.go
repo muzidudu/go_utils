@@ -19,12 +19,16 @@ type Options[S any] struct {
 
 	// SkipRubbishBotBlock 为 true 时不拦截垃圾 UA（不返回 403）
 	SkipRubbishBotBlock bool
+	// SkipRubbishBotBlockFn 非空时优先于 SkipRubbishBotBlock（便于配置热更新）
+	SkipRubbishBotBlockFn func() bool
 
 	// RubbishBotUserAgents 可选：返回用于垃圾 UA 匹配的子串列表；nil 或空切片则使用 DefaultRubbishBotSubstrings
 	RubbishBotUserAgents func(c fiber.Ctx) []string
 
 	// SkipLanguageCheck 为 true 时，非爬虫不校验 Accept-Language
 	SkipLanguageCheck bool
+	// SkipLanguageCheckFn 非空时优先于 SkipLanguageCheck（便于配置热更新）
+	SkipLanguageCheckFn func() bool
 
 	// PreferredLanguageTags 在非爬虫且未跳过语言检查时使用：首选语言主标签须在此列表中。
 	// nil 或空切片则使用 DefaultPreferredLanguageTags（["zh"]）
