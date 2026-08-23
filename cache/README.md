@@ -87,6 +87,7 @@ c.Set("key", "value", 0)
 - **gzip 压缩**：存储前压缩，读取时解压
 - **Prefix**：key 前缀，用于命名空间隔离
 - **DeleteByPrefix**：按前缀批量删除
+- **自动重连**：底层客户端异常关闭或连接断开时，下一次读写会重建连接并重试一次；显式 `Close()` 后不再重连
 
 ```go
 c, _ := cache.NewRedisCache(cache.RedisConfig{

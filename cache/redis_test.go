@@ -1,10 +1,12 @@
 package cache
 
 import (
+	"errors"
 	"testing"
 	"time"
 
 	"github.com/alicebob/miniredis/v2"
+	"github.com/redis/go-redis/v9"
 )
 
 func newTestRedis(t *testing.T) *RedisCache {
@@ -143,6 +145,76 @@ func TestRedisCache_TTL(t *testing.T) {
 	}
 }
 
+func TestRedisCache_ReconnectAfterClientClosed(t *testing.T) {
+	c := newTestRedis(t)
+
+	if err := c.Set("k1", "v1", 0); err != nil {
+		t.Fatal(err)
+	}
+	if err := c.Client().Close(); err != nil {
+		t.Fatal(err)
+	}
+	if err := c.Set("k1", "v2", 0); err != nil {
+		t.Fatalf("expected auto-reconnect after client close, got %v", err)
+	}
+	got, err := c.Get("k1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.(string) != "v2" {
+		t.Errorf("got %q", got)
+	}
+}
+
+func TestRedisCache_CloseStopsReconnect(t *testing.T) {
+	c := newTestRedis(t)
+	if err := c.Close(); err != nil {
+		t.Fatal(err)
+	}
+	err := c.Set("k1", "v1", 0)
+	if err == nil {
+		t.Fatal("expected error after Close")
+	}
+	if !errors.Is(err, redis.ErrClosed) {
+		t.Errorf("expected redis.ErrClosed, got %v", err)
+	}
+}
+
+func TestRedisCache_ReconnectAfterServerRestart(t *testing.T) {
+	mr, err := miniredis.Run()
+	if err != nil {
+		t.Fatal(err)
+	}
+	addr := mr.Addr()
+	c, err := NewRedisCache(RedisConfig{Addr: addr, Prefix: "t:"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer c.Close()
+
+	if err := c.Set("k1", "before", 0); err != nil {
+		t.Fatal(err)
+	}
+	mr.Close()
+
+	mr2 := miniredis.NewMiniRedis()
+	if err := mr2.StartAddr(addr); err != nil {
+		t.Fatal(err)
+	}
+	defer mr2.Close()
+
+	if err := c.Set("k1", "after", 0); err != nil {
+		t.Fatalf("expected auto-reconnect after server restart, got %v", err)
+	}
+	got, err := c.Get("k1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.(string) != "after" {
+		t.Errorf("got %q", got)
+	}
+}
+
 func TestCacheFactory_WithRedis(t *testing.T) {
 	mr := miniredis.RunT(t)
 	defer mr.Close()
@@ -162,6 +234,44 @@ func TestCacheFactory_WithRedis(t *testing.T) {
 	}
 	f.Set("k1", "v1", 0)
 	got, _ := f.Get("k1")
+	if got.(string) != "v1" {
+		t.Errorf("got %q", got)
+	}
+}
+
+func TestCacheFactory_RedisReconnectAfterClientClosed(t *testing.T) {
+	mr := miniredis.RunT(t)
+	defer mr.Close()
+
+	f := NewCacheFactory(FactoryConfig{
+		Redis: &RedisConfig{
+			Addr:   mr.Addr(),
+			Prefix: "app:",
+		},
+		Memory: &MemoryConfig{MaxCount: 100},
+	})
+	defer f.Close()
+
+	if !f.IsRedis() {
+		t.Fatal("expected Redis to be used")
+	}
+	rc, ok := f.Cache().(*RedisCache)
+	if !ok {
+		t.Fatal("expected *RedisCache")
+	}
+	if err := rc.Client().Close(); err != nil {
+		t.Fatal(err)
+	}
+	if err := f.Set("k1", "v1", 0); err != nil {
+		t.Fatalf("expected auto-reconnect, got %v", err)
+	}
+	if !f.IsRedis() {
+		t.Fatal("should still use Redis after reconnect")
+	}
+	got, err := f.Get("k1")
+	if err != nil {
+		t.Fatal(err)
+	}
 	if got.(string) != "v1" {
 		t.Errorf("got %q", got)
 	}
