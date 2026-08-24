@@ -32,6 +32,8 @@ var packageBuiltinFilters = []struct {
 	{"default_empty", filterDefaultEmpty},
 	{"truncate_chars", filterTruncateChars},
 	{"replace", filterReplace},
+	{"filesize", filterFilesize},
+	{"number", filterNumber},
 }
 
 func (e *SitesEngine) initBuiltinFilters() {
@@ -253,4 +255,136 @@ func filterTruncateChars(in *pongo2.Value, param *pongo2.Value) (*pongo2.Value, 
 		return pongo2.AsValue(string(s[:max])), nil
 	}
 	return pongo2.AsValue(string(s[:max-3]) + "..."), nil
+}
+
+var filesizeUnits = []string{"B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"}
+
+var numberUnits = []struct {
+	suffix string
+	base   float64
+}{
+	{"t", 1e12},
+	{"b", 1e9},
+	{"m", 1e6},
+	{"k", 1e3},
+}
+
+func valueAsFloat(in *pongo2.Value) (float64, error) {
+	if in == nil || in.IsNil() {
+		return 0, nil
+	}
+	switch v := in.Interface().(type) {
+	case int:
+		return float64(v), nil
+	case int8:
+		return float64(v), nil
+	case int16:
+		return float64(v), nil
+	case int32:
+		return float64(v), nil
+	case int64:
+		return float64(v), nil
+	case uint:
+		return float64(v), nil
+	case uint8:
+		return float64(v), nil
+	case uint16:
+		return float64(v), nil
+	case uint32:
+		return float64(v), nil
+	case uint64:
+		return float64(v), nil
+	case float32:
+		return float64(v), nil
+	case float64:
+		return v, nil
+	case json.Number:
+		return v.Float64()
+	}
+	s := strings.TrimSpace(in.String())
+	if s == "" {
+		return 0, nil
+	}
+	return strconv.ParseFloat(s, 64)
+}
+
+func parsePrecision(param *pongo2.Value, defaultN int) int {
+	if param == nil || param.IsNil() || param.String() == "" {
+		return defaultN
+	}
+	n := param.Integer()
+	if n < 0 {
+		return defaultN
+	}
+	return n
+}
+
+func formatDecimal(n float64, precision int) string {
+	s := strconv.FormatFloat(n, 'f', precision, 64)
+	s = strings.TrimRight(s, "0")
+	s = strings.TrimRight(s, ".")
+	if s == "" || s == "-0" {
+		return "0"
+	}
+	return s
+}
+
+func formatFilesize(n float64, precision int) string {
+	if math.IsNaN(n) || math.IsInf(n, 0) {
+		return "0 B"
+	}
+	sign := ""
+	if n < 0 {
+		sign = "-"
+		n = -n
+	}
+	if n < 1024 {
+		return sign + formatDecimal(n, precision) + " B"
+	}
+	unit := 0
+	for n >= 1024 && unit < len(filesizeUnits)-1 {
+		n /= 1024
+		unit++
+	}
+	return sign + formatDecimal(n, precision) + " " + filesizeUnits[unit]
+}
+
+func formatNumber(n float64, precision int) string {
+	if math.IsNaN(n) || math.IsInf(n, 0) {
+		return "0"
+	}
+	sign := ""
+	if n < 0 {
+		sign = "-"
+		n = -n
+	}
+	for _, u := range numberUnits {
+		if n >= u.base {
+			return sign + formatDecimal(n/u.base, precision) + u.suffix
+		}
+	}
+	if n == math.Trunc(n) {
+		return sign + strconv.FormatInt(int64(n), 10)
+	}
+	return sign + formatDecimal(n, precision)
+}
+
+// filterFilesize：按 1024 进制格式化字节。模板: {{ 1536|filesize }} -> "1.5 KB"
+// 参数为小数位数，默认 1。单位：B / KB / MB / GB / TB / PB / EB / ZB / YB
+func filterFilesize(in *pongo2.Value, param *pongo2.Value) (*pongo2.Value, *pongo2.Error) {
+	n, err := valueAsFloat(in)
+	if err != nil {
+		return nil, &pongo2.Error{Sender: "filesize", OrigError: err}
+	}
+	return pongo2.AsValue(formatFilesize(n, parsePrecision(param, 1))), nil
+}
+
+// filterNumber：格式化浏览量等大数字。模板: {{ 1500|number }} -> "1.5k"
+// 参数为小数位数，默认 1。单位：k / m / b / t
+func filterNumber(in *pongo2.Value, param *pongo2.Value) (*pongo2.Value, *pongo2.Error) {
+	n, err := valueAsFloat(in)
+	if err != nil {
+		return nil, &pongo2.Error{Sender: "number", OrigError: err}
+	}
+	return pongo2.AsValue(formatNumber(n, parsePrecision(param, 1))), nil
 }

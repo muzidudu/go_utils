@@ -7,7 +7,7 @@
 - **多站点/多主题**：按 `Theme` 或 `siteBase.Template` 自动选择模板目录
 - **Django 语法**：使用 pongo2 的 Django 风格模板语法
 - **自定义 Tag**：支持 `RegisterTag` 注册 pongo2 自定义标签
-- **内置 Filter**：16 个扩展 filter（`New` 后自动注册，见下文「内置 Filter」）
+- **内置 Filter**：18 个扩展 filter（`New` 后自动注册，见下文「内置 Filter」）
 - **扩展 Filter**：支持 `RegisterFilter` / `ReplaceFilter` / `FilterExists`
 - **Layout 布局**：支持 `layouts/main` 等布局模板
 - **回退机制**：主题模板不存在时自动回退到 `default` 主题
@@ -201,6 +201,20 @@ Filter 签名：`func(in *pongo2.Value, param *pongo2.Value) (*pongo2.Value, *po
 
 ```django
 {{ text|wordwrap:5 }}
+```
+
+### 数字与容量
+
+| 名称 | 说明 |
+|------|------|
+| `filesize` | 按 **1024** 进制格式化字节；参数为小数位数（默认 1），去尾零。单位：`B` `KB` `MB` `GB` `TB` `PB` `EB` `ZB` `YB` |
+| `number` | 格式化浏览量等大数字；参数为小数位数（默认 1），去尾零。单位：`k` `m` `b` `t` |
+
+```django
+{{ 1536|filesize }}
+{{ file_size|filesize:2 }}
+{{ 1500|number }}
+{{ views|number:1 }}
 ```
 
 ### 新增内置 filter（维护者）
