@@ -6,6 +6,7 @@ import (
 	"math"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/flosch/pongo2/v6"
 )
@@ -34,6 +35,7 @@ var packageBuiltinFilters = []struct {
 	{"replace", filterReplace},
 	{"filesize", filterFilesize},
 	{"number", filterNumber},
+	{"friendly_time", filterFriendlyTime},
 }
 
 func (e *SitesEngine) initBuiltinFilters() {
@@ -387,4 +389,93 @@ func filterNumber(in *pongo2.Value, param *pongo2.Value) (*pongo2.Value, *pongo2
 		return nil, &pongo2.Error{Sender: "number", OrigError: err}
 	}
 	return pongo2.AsValue(formatNumber(n, parsePrecision(param, 1))), nil
+}
+
+var friendlyTimeLayouts = []string{
+	time.RFC3339Nano,
+	time.RFC3339,
+	"2006-01-02 15:04:05",
+	"2006-01-02 15:04",
+	"2006-01-02",
+}
+
+func parseFriendlyTime(in *pongo2.Value) (time.Time, error) {
+	if in == nil || in.IsNil() {
+		return time.Time{}, nil
+	}
+
+	switch value := in.Interface().(type) {
+	case time.Time:
+		return value, nil
+	case *time.Time:
+		if value == nil {
+			return time.Time{}, nil
+		}
+		return *value, nil
+	}
+
+	value := strings.TrimSpace(in.String())
+	if value == "" {
+		return time.Time{}, nil
+	}
+	if timestamp, err := strconv.ParseInt(value, 10, 64); err == nil {
+		// 绝对值达到 1e12 时按毫秒时间戳处理。
+		if timestamp >= 1e12 || timestamp <= -1e12 {
+			return time.UnixMilli(timestamp), nil
+		}
+		return time.Unix(timestamp, 0), nil
+	}
+
+	var err error
+	for _, layout := range friendlyTimeLayouts {
+		var parsed time.Time
+		if layout == time.RFC3339Nano || layout == time.RFC3339 {
+			parsed, err = time.Parse(layout, value)
+		} else {
+			parsed, err = time.ParseInLocation(layout, value, time.Local)
+		}
+		if err == nil {
+			return parsed, nil
+		}
+	}
+
+	return time.Time{}, fmt.Errorf("unsupported time value %q", value)
+}
+
+func formatFriendlyTime(value, now time.Time) string {
+	if value.IsZero() {
+		return ""
+	}
+
+	duration := now.Sub(value)
+	suffix := "前"
+	if duration < 0 {
+		duration = -duration
+		suffix = "后"
+	}
+
+	switch {
+	case duration < time.Minute:
+		return "刚刚"
+	case duration < time.Hour:
+		return strconv.FormatInt(int64(duration/time.Minute), 10) + "分钟" + suffix
+	case duration < 24*time.Hour:
+		return strconv.FormatInt(int64(duration/time.Hour), 10) + "小时" + suffix
+	case duration < 30*24*time.Hour:
+		return strconv.FormatInt(int64(duration/(24*time.Hour)), 10) + "天" + suffix
+	case duration < 365*24*time.Hour:
+		return strconv.FormatInt(int64(duration/(30*24*time.Hour)), 10) + "个月" + suffix
+	default:
+		return strconv.FormatInt(int64(duration/(365*24*time.Hour)), 10) + "年" + suffix
+	}
+}
+
+// filterFriendlyTime：将时间格式化为友好的相对时间。模板: {{ created_at|friendly_time }} -> "5分钟前"
+// 支持 time.Time、Unix 秒/毫秒时间戳、RFC3339 及常见日期时间字符串。
+func filterFriendlyTime(in *pongo2.Value, _ *pongo2.Value) (*pongo2.Value, *pongo2.Error) {
+	value, err := parseFriendlyTime(in)
+	if err != nil {
+		return nil, &pongo2.Error{Sender: "friendly_time", OrigError: err}
+	}
+	return pongo2.AsValue(formatFriendlyTime(value, time.Now())), nil
 }

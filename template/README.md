@@ -7,7 +7,7 @@
 - **多站点/多主题**：按 `Theme` 或 `siteBase.Template` 自动选择模板目录
 - **Django 语法**：使用 pongo2 的 Django 风格模板语法
 - **自定义 Tag**：支持 `RegisterTag` 注册 pongo2 自定义标签
-- **内置 Filter**：18 个扩展 filter（`New` 后自动注册，见下文「内置 Filter」）
+- **内置 Filter**：19 个扩展 filter（`New` 后自动注册，见下文「内置 Filter」）
 - **扩展 Filter**：支持 `RegisterFilter` / `ReplaceFilter` / `FilterExists`
 - **Layout 布局**：支持 `layouts/main` 等布局模板
 - **回退机制**：主题模板不存在时自动回退到 `default` 主题
@@ -216,6 +216,18 @@ Filter 签名：`func(in *pongo2.Value, param *pongo2.Value) (*pongo2.Value, *po
 {{ 1500|number }}
 {{ views|number:1 }}
 ```
+
+### 时间
+
+| 名称 | 说明 |
+|------|------|
+| `friendly_time` | 将时间格式化为友好的中文相对时间；支持 `time.Time`、Unix 秒/毫秒时间戳、RFC3339、`YYYY-MM-DD HH:mm:ss`、`YYYY-MM-DD HH:mm` 和 `YYYY-MM-DD` |
+
+```django
+{{ created_at|friendly_time }}
+```
+
+输出示例：`刚刚`、`5分钟前`、`3小时前`、`7天前`、`2个月前`、`1年前`；未来时间输出 `5分钟后` 等。
 
 ### 新增内置 filter（维护者）
 

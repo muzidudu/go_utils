@@ -5,13 +5,14 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/flosch/pongo2/v6"
 )
 
 func TestNew_BuiltinFilters(t *testing.T) {
 	e := New(t.TempDir(), ".django")
-	for _, name := range []string{"suffix", "default_empty", "truncate_chars", "filesize", "number"} {
+	for _, name := range []string{"suffix", "default_empty", "truncate_chars", "filesize", "number", "friendly_time"} {
 		if !e.FilterExists(name) {
 			t.Errorf("builtin filter %q should exist after New", name)
 		}
@@ -134,5 +135,56 @@ func TestBuiltinFilters_FilesizeNumberRender(t *testing.T) {
 	want := "1.5 KB 1.5k"
 	if got := out.String(); got != want {
 		t.Errorf("got %q want %q", got, want)
+	}
+}
+
+func TestFormatFriendlyTime(t *testing.T) {
+	now := time.Date(2026, time.September, 5, 17, 0, 0, 0, time.Local)
+	cases := []struct {
+		name  string
+		value time.Time
+		want  string
+	}{
+		{"zero", time.Time{}, ""},
+		{"just now", now.Add(-30 * time.Second), "刚刚"},
+		{"minutes ago", now.Add(-5 * time.Minute), "5分钟前"},
+		{"hours ago", now.Add(-3 * time.Hour), "3小时前"},
+		{"days ago", now.Add(-7 * 24 * time.Hour), "7天前"},
+		{"months ago", now.Add(-90 * 24 * time.Hour), "3个月前"},
+		{"years ago", now.Add(-2 * 365 * 24 * time.Hour), "2年前"},
+		{"future", now.Add(2 * time.Hour), "2小时后"},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := formatFriendlyTime(tc.value, now); got != tc.want {
+				t.Errorf("formatFriendlyTime() = %q, want %q", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestParseFriendlyTime(t *testing.T) {
+	want := time.Date(2026, time.September, 5, 9, 30, 0, 0, time.Local)
+	cases := []any{
+		want,
+		&want,
+		want.Unix(),
+		want.UnixMilli(),
+		"2026-09-05 09:30:00",
+	}
+
+	for _, input := range cases {
+		got, err := parseFriendlyTime(pongo2.AsValue(input))
+		if err != nil {
+			t.Fatalf("parseFriendlyTime(%v): %v", input, err)
+		}
+		if !got.Equal(want) {
+			t.Errorf("parseFriendlyTime(%v) = %v, want %v", input, got, want)
+		}
+	}
+
+	if _, err := parseFriendlyTime(pongo2.AsValue("not-a-time")); err == nil {
+		t.Error("parseFriendlyTime() should reject unsupported values")
 	}
 }
