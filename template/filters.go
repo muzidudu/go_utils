@@ -3,7 +3,7 @@ package template
 import (
 	"fmt"
 
-	"github.com/flosch/pongo2/v6"
+	"github.com/flosch/pongo2/v7"
 )
 
 type filterEntry struct {

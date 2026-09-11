@@ -11,7 +11,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/flosch/pongo2/v6"
+	"github.com/flosch/pongo2/v7"
 	core "github.com/gofiber/template/v2"
 )
 
@@ -20,8 +20,8 @@ import (
 // binding 中需包含 Theme 或 siteBase.Template 以确定当前站点模板
 type SitesEngine struct {
 	core.Engine
-	autoEscape     bool
-	Templates      map[string]*pongo2.Template // key: "theme/name"
+	autoEscape        bool
+	Templates         map[string]*pongo2.Template // key: "theme/name"
 	tagParsers        []tagParser
 	tagsRegistered    bool
 	tagsRegMu         sync.Mutex
@@ -43,7 +43,7 @@ func New(baseDir, extension string) *SitesEngine {
 		Templates:  make(map[string]*pongo2.Template),
 		tagParsers: nil,
 	}
-	
+
 	e.Engine.Left = "{{"
 	e.Engine.Right = "}}"
 	e.Engine.Directory = baseDir

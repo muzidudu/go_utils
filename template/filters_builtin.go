@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/flosch/pongo2/v6"
+	"github.com/flosch/pongo2/v7"
 )
 
 // 本包内置 filter，在 New 时加入待注册列表，Load 时写入 pongo2。

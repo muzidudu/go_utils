@@ -277,7 +277,7 @@ if site != nil {
 
 ## 依赖
 
-- `github.com/flosch/pongo2/v6`
+- `github.com/flosch/pongo2/v7`
 - `github.com/gofiber/template/v2`（实现 Engine 接口）
 
 ## License

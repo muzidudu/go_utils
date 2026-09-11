@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/flosch/pongo2/v6"
+	"github.com/flosch/pongo2/v7"
 )
 
 func TestNew_BuiltinFilters(t *testing.T) {

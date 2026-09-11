@@ -5,7 +5,7 @@ import (
 	"bytes"
 	"strings"
 
-	"github.com/flosch/pongo2/v6"
+	"github.com/flosch/pongo2/v7"
 )
 
 // TagUppercaseParser 示例：uppercase tag 解析器
