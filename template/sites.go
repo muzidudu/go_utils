@@ -22,6 +22,7 @@ type SitesEngine struct {
 	core.Engine
 	autoEscape        bool
 	Templates         map[string]*pongo2.Template // key: "theme/name"
+	set               *pongo2.TemplateSet         // 共享 TemplateSet，所有 theme 的模板共用
 	tagParsers        []tagParser
 	tagsRegistered    bool
 	tagsRegMu         sync.Mutex
@@ -39,8 +40,11 @@ type tagParser struct {
 // baseDir: 模板根目录，如 "views"
 // extension: 模板扩展名，如 ".django"
 func New(baseDir, extension string) *SitesEngine {
+	loader := pongo2.MustNewLocalFileSystemLoader("")
+	set := pongo2.NewSet("sites", loader)
 	e := &SitesEngine{
 		Templates:  make(map[string]*pongo2.Template),
+		set:        set,
 		tagParsers: nil,
 	}
 
@@ -51,6 +55,7 @@ func New(baseDir, extension string) *SitesEngine {
 	e.Engine.LayoutName = "embed"
 	e.Engine.Funcmap = make(map[string]interface{})
 	e.autoEscape = true
+	e.set.SetAutoescape(e.autoEscape)
 	e.initBuiltinFilters()
 	return e
 }
@@ -126,7 +131,7 @@ func (e *SitesEngine) Load() error {
 	e.tagsRegMu.Lock()
 	if !e.tagsRegistered && len(e.tagParsers) > 0 {
 		for _, tp := range e.tagParsers {
-			_ = pongo2.RegisterTag(tp.name, tp.fn)
+			_ = e.set.RegisterTag(tp.name, tp.fn)
 		}
 		e.tagsRegistered = true
 	}
@@ -138,7 +143,7 @@ func (e *SitesEngine) Load() error {
 	e.Templates = make(map[string]*pongo2.Template)
 	baseDir := e.Directory
 	templateDir := filepath.Join(baseDir, "template")
-	pongo2.SetAutoescape(e.autoEscape)
+	e.set.SetAutoescape(e.autoEscape)
 
 	entries, err := os.ReadDir(templateDir)
 	if err != nil {
@@ -169,9 +174,7 @@ func (e *SitesEngine) Load() error {
 
 // loadTheme 加载单个 theme 目录下的模板
 func (e *SitesEngine) loadTheme(themePath, theme string) error {
-	pongoloader := pongo2.MustNewLocalFileSystemLoader(themePath)
-	pongoset := pongo2.NewSet("theme:"+theme, pongoloader)
-	pongoset.Globals.Update(e.Funcmap)
+	e.set.Globals.Update(e.Funcmap)
 	walkFn := func(path string, info os.FileInfo, err error) error {
 		if err != nil || info == nil || info.IsDir() {
 			return err
@@ -191,7 +194,7 @@ func (e *SitesEngine) loadTheme(themePath, theme string) error {
 		if err != nil {
 			return err
 		}
-		tmpl, err := pongoset.FromBytes(buf)
+		tmpl, err := e.set.FromBytes(buf)
 		if err != nil {
 			return err
 		}

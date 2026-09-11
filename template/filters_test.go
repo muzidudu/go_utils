@@ -61,10 +61,10 @@ func TestSitesEngine_RegisterFilterAfterLoad(t *testing.T) {
 	}
 }
 
-func filterTestSuffix(in *pongo2.Value, _ *pongo2.Value) (*pongo2.Value, *pongo2.Error) {
+func filterTestSuffix(in *pongo2.Value, _ *pongo2.Value) (*pongo2.Value, error) {
 	return pongo2.AsValue(in.String() + "!"), nil
 }
 
-func filterTestSuffixExclaim(in *pongo2.Value, _ *pongo2.Value) (*pongo2.Value, *pongo2.Error) {
+func filterTestSuffixExclaim(in *pongo2.Value, _ *pongo2.Value) (*pongo2.Value, error) {
 	return pongo2.AsValue(in.String() + "!!"), nil
 }

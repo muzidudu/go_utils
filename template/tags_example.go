@@ -16,7 +16,7 @@ type tagUppercaseNode struct {
 	body pongo2.INode
 }
 
-func (n *tagUppercaseNode) Execute(ctx *pongo2.ExecutionContext, writer pongo2.TemplateWriter) *pongo2.Error {
+func (n *tagUppercaseNode) Execute(ctx *pongo2.ExecutionContext, writer pongo2.TemplateWriter) error {
 	buf := bytes.NewBuffer(nil)
 	if err := n.body.Execute(ctx, buf); err != nil {
 		return err
@@ -29,7 +29,7 @@ func (n *tagUppercaseNode) Execute(ctx *pongo2.ExecutionContext, writer pongo2.T
 }
 
 // TagUppercaseParser 解析 uppercase 标签
-func TagUppercaseParser(doc *pongo2.Parser, start *pongo2.Token, arguments *pongo2.Parser) (pongo2.INodeTag, *pongo2.Error) {
+func TagUppercaseParser(doc *pongo2.Parser, start *pongo2.Token, arguments *pongo2.Parser) (pongo2.INodeTag, error) {
 	wrapper, endargs, err := doc.WrapUntilTag("enduppercase")
 	if err != nil {
 		return nil, err

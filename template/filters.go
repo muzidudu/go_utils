@@ -12,12 +12,12 @@ type filterEntry struct {
 	replace bool
 }
 
-// RegisterFilter 注册自定义 pongo2 filter，需在 Load 之前调用（Load 之后调用则立即注册到全局）。
+// RegisterFilter 注册自定义 pongo2 filter，需在 Load 之前调用（Load 之后调用则立即注册到引擎的 TemplateSet）。
 func (e *SitesEngine) RegisterFilter(name string, fn pongo2.FilterFunction) error {
 	e.filtersRegMu.Lock()
 	defer e.filtersRegMu.Unlock()
 	if e.filtersRegistered {
-		return pongo2.RegisterFilter(name, fn)
+		return e.set.RegisterFilter(name, fn)
 	}
 	if e.filterExistsLocked(name) {
 		return fmt.Errorf("filter with name '%s' is already registered", name)
@@ -26,12 +26,12 @@ func (e *SitesEngine) RegisterFilter(name string, fn pongo2.FilterFunction) erro
 	return nil
 }
 
-// ReplaceFilter 替换已存在的 filter 实现；Load 之前可覆盖本引擎待注册的同名 filter，或覆盖 pongo2 已内置的 filter。
+// ReplaceFilter 替换已存在的 filter 实现；Load 之前可覆盖本引擎待注册的同名 filter，或覆盖已内置的 filter。
 func (e *SitesEngine) ReplaceFilter(name string, fn pongo2.FilterFunction) error {
 	e.filtersRegMu.Lock()
 	defer e.filtersRegMu.Unlock()
 	if e.filtersRegistered {
-		return pongo2.ReplaceFilter(name, fn)
+		return e.set.ReplaceFilter(name, fn)
 	}
 	for i := range e.filterEntries {
 		if e.filterEntries[i].name == name {
@@ -40,7 +40,7 @@ func (e *SitesEngine) ReplaceFilter(name string, fn pongo2.FilterFunction) error
 			return nil
 		}
 	}
-	if !pongo2.FilterExists(name) {
+	if !pongo2.BuiltinFilterExists(name) && !e.filterExistsLocked(name) {
 		return fmt.Errorf("filter with name '%s' does not exist (therefore cannot be overridden)", name)
 	}
 	e.filterEntries = append(e.filterEntries, filterEntry{name: name, fn: fn, replace: true})
@@ -60,7 +60,10 @@ func (e *SitesEngine) filterExistsLocked(name string) bool {
 			return true
 		}
 	}
-	return pongo2.FilterExists(name)
+	if e.filtersRegistered && e.set != nil {
+		return e.set.FilterExists(name)
+	}
+	return pongo2.BuiltinFilterExists(name)
 }
 
 func (e *SitesEngine) registerFilters() error {
@@ -73,12 +76,12 @@ func (e *SitesEngine) registerFilters() error {
 		var err error
 		switch {
 		case fe.replace:
-			err = pongo2.ReplaceFilter(fe.name, fe.fn)
-		case pongo2.FilterExists(fe.name):
-			// pongo2 filter 为进程级全局表，避免多引擎 Load 时重复注册
+			err = e.set.ReplaceFilter(fe.name, fe.fn)
+		case e.set.FilterExists(fe.name):
+			// 避免重复注册
 			continue
 		default:
-			err = pongo2.RegisterFilter(fe.name, fe.fn)
+			err = e.set.RegisterFilter(fe.name, fe.fn)
 		}
 		if err != nil {
 			return fmt.Errorf("filter %q: %w", fe.name, err)

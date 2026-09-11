@@ -45,12 +45,12 @@ func (e *SitesEngine) initBuiltinFilters() {
 }
 
 // filterContains：判断字符串是否包含参数。模板: {{ "hi"|contains:"h" }} -> true
-func filterContains(in *pongo2.Value, param *pongo2.Value) (*pongo2.Value, *pongo2.Error) {
+func filterContains(in *pongo2.Value, param *pongo2.Value) (*pongo2.Value, error) {
 	return pongo2.AsValue(in.Contains(param)), nil
 }
 
 // filterTrim：去除字符串两端的空格。模板: {{ " hi "|trim }} -> "hi"
-func filterTrim(in *pongo2.Value, param *pongo2.Value) (*pongo2.Value, *pongo2.Error) {
+func filterTrim(in *pongo2.Value, param *pongo2.Value) (*pongo2.Value, error) {
 	if param.IsNil() || len(param.String()) == 0 {
 		return pongo2.AsValue(strings.TrimSpace(in.String())), nil
 	}
@@ -58,17 +58,17 @@ func filterTrim(in *pongo2.Value, param *pongo2.Value) (*pongo2.Value, *pongo2.E
 }
 
 // filterTrimLeft：去除字符串左端的空格。模板: {{ " hi "|trim_left }} -> "hi "
-func filterTrimLeft(in *pongo2.Value, param *pongo2.Value) (*pongo2.Value, *pongo2.Error) {
+func filterTrimLeft(in *pongo2.Value, param *pongo2.Value) (*pongo2.Value, error) {
 	return pongo2.AsValue(strings.TrimLeft(in.String(), param.String())), nil
 }
 
 // filterTrimRight：去除字符串右端的空格。模板: {{ " hi "|trim_right }} -> " hi"
-func filterTrimRight(in *pongo2.Value, param *pongo2.Value) (*pongo2.Value, *pongo2.Error) {
+func filterTrimRight(in *pongo2.Value, param *pongo2.Value) (*pongo2.Value, error) {
 	return pongo2.AsValue(strings.TrimRight(in.String(), param.String())), nil
 }
 
 // filterReplace：替换字符串。模板: {{ "hi"|replace:"h","j" }} -> "jij"
-func filterReplace(in *pongo2.Value, param *pongo2.Value) (*pongo2.Value, *pongo2.Error) {
+func filterReplace(in *pongo2.Value, param *pongo2.Value) (*pongo2.Value, error) {
 	sep := strings.Split(param.String(), ",")
 	from := sep[0]
 	to := ""
@@ -79,7 +79,7 @@ func filterReplace(in *pongo2.Value, param *pongo2.Value) (*pongo2.Value, *pongo
 }
 
 // filterList：将字符串转换为列表。模板: {{ "hi,hello"|list }} -> ["hi", "hello"]
-func filterList(in *pongo2.Value, param *pongo2.Value) (*pongo2.Value, *pongo2.Error) {
+func filterList(in *pongo2.Value, param *pongo2.Value) (*pongo2.Value, error) {
 	income := []rune(strings.TrimSpace(strings.Trim(strings.Trim(in.String(), "'\""), "[]")))
 	var result = make([]string, 0, len(income))
 	if len(income) == 0 {
@@ -125,12 +125,12 @@ func filterList(in *pongo2.Value, param *pongo2.Value) (*pongo2.Value, *pongo2.E
 }
 
 // filterFields：将字符串转换为字段列表。模板: {{ "hi hello"|fields }} -> ["hi", "hello"]
-func filterFields(in *pongo2.Value, param *pongo2.Value) (*pongo2.Value, *pongo2.Error) {
+func filterFields(in *pongo2.Value, param *pongo2.Value) (*pongo2.Value, error) {
 	return pongo2.AsValue(strings.Fields(in.String())), nil
 }
 
 // filterCount：计算字符串中包含参数的次数。模板: {{ "hi hello"|count:"h" }} -> 1
-func filterCount(in *pongo2.Value, param *pongo2.Value) (*pongo2.Value, *pongo2.Error) {
+func filterCount(in *pongo2.Value, param *pongo2.Value) (*pongo2.Value, error) {
 	if in.IsString() {
 		return pongo2.AsValue(strings.Count(in.String(), param.String())), nil
 	}
@@ -152,7 +152,7 @@ func filterCount(in *pongo2.Value, param *pongo2.Value) (*pongo2.Value, *pongo2.
 }
 
 // filterIndex：计算字符串中参数的索引。模板: {{ "hi hello"|index:"h" }} -> 0
-func filterIndex(in *pongo2.Value, param *pongo2.Value) (*pongo2.Value, *pongo2.Error) {
+func filterIndex(in *pongo2.Value, param *pongo2.Value) (*pongo2.Value, error) {
 	if in.IsString() {
 		return pongo2.AsValue(strings.Index(in.String(), param.String())), nil
 	}
@@ -176,17 +176,17 @@ func filterIndex(in *pongo2.Value, param *pongo2.Value) (*pongo2.Value, *pongo2.
 }
 
 // filterRepeat：重复字符串。模板: {{ "hi"|repeat:3 }} -> "hihihi"
-func filterRepeat(in *pongo2.Value, param *pongo2.Value) (*pongo2.Value, *pongo2.Error) {
+func filterRepeat(in *pongo2.Value, param *pongo2.Value) (*pongo2.Value, error) {
 	return pongo2.AsValue(strings.Repeat(in.String(), param.Integer())), nil
 }
 
 // filterDump：打印字符串。模板: {{ "hi"|dump }} -> "hi"
-func filterDump(in *pongo2.Value, param *pongo2.Value) (*pongo2.Value, *pongo2.Error) {
+func filterDump(in *pongo2.Value, param *pongo2.Value) (*pongo2.Value, error) {
 	return pongo2.AsValue(fmt.Sprintf("%+v", in.Interface())), nil
 }
 
 // filterSplit：将字符串转换为列表。模板: {{ "hi,hello"|split:"," }} -> ["hi", "hello"]
-func filterSplit(in *pongo2.Value, param *pongo2.Value) (*pongo2.Value, *pongo2.Error) {
+func filterSplit(in *pongo2.Value, param *pongo2.Value) (*pongo2.Value, error) {
 	sep := param.String()
 	if sep == "\\n" {
 		sep = "\n"
@@ -196,14 +196,14 @@ func filterSplit(in *pongo2.Value, param *pongo2.Value) (*pongo2.Value, *pongo2.
 }
 
 // filterJson：将字符串转换为 JSON。模板: {{ "hi"|json }} -> "{"hi"}"
-func filterJson(in *pongo2.Value, param *pongo2.Value) (*pongo2.Value, *pongo2.Error) {
+func filterJson(in *pongo2.Value, param *pongo2.Value) (*pongo2.Value, error) {
 	s := in.Interface()
 	buf, _ := json.Marshal(s)
 	return pongo2.AsValue(string(buf)), nil
 }
 
 // filterWordwrap：按单词换行。模板: {{ "hi hello"|wordwrap:3 }} -> "hi\nhello"
-func filterWordwrap(in *pongo2.Value, param *pongo2.Value) (*pongo2.Value, *pongo2.Error) {
+func filterWordwrap(in *pongo2.Value, param *pongo2.Value) (*pongo2.Value, error) {
 	words := strings.Fields(in.String())
 	wordsLen := len(words)
 	wrapAt := param.Integer()
@@ -220,7 +220,7 @@ func filterWordwrap(in *pongo2.Value, param *pongo2.Value) (*pongo2.Value, *pong
 }
 
 // filterSuffix：末尾追加参数，无参数时追加 "!"。模板: {{ "hi"|suffix }} 或 {{ "hi"|suffix:"~" }}
-func filterSuffix(in *pongo2.Value, param *pongo2.Value) (*pongo2.Value, *pongo2.Error) {
+func filterSuffix(in *pongo2.Value, param *pongo2.Value) (*pongo2.Value, error) {
 	suffix := "!"
 	if param != nil && !param.IsNil() {
 		suffix = param.String()
@@ -229,7 +229,7 @@ func filterSuffix(in *pongo2.Value, param *pongo2.Value) (*pongo2.Value, *pongo2
 }
 
 // filterDefaultEmpty：空字符串时用参数作默认值。模板: {{ name|default_empty:"匿名" }}
-func filterDefaultEmpty(in *pongo2.Value, param *pongo2.Value) (*pongo2.Value, *pongo2.Error) {
+func filterDefaultEmpty(in *pongo2.Value, param *pongo2.Value) (*pongo2.Value, error) {
 	if strings.TrimSpace(in.String()) != "" {
 		return in, nil
 	}
@@ -240,12 +240,12 @@ func filterDefaultEmpty(in *pongo2.Value, param *pongo2.Value) (*pongo2.Value, *
 }
 
 // filterTruncateChars：按 rune 截断并加 "..."。模板: {{ content|truncate_chars:20 }}
-func filterTruncateChars(in *pongo2.Value, param *pongo2.Value) (*pongo2.Value, *pongo2.Error) {
+func filterTruncateChars(in *pongo2.Value, param *pongo2.Value) (*pongo2.Value, error) {
 	max := 50
 	if param != nil && !param.IsNil() {
 		n, err := strconv.Atoi(param.String())
 		if err != nil || n < 0 {
-			return nil, &pongo2.Error{Sender: "truncate_chars", OrigError: err}
+			return nil, &pongo2.Error{Sender: "filter:truncate_chars", OrigError: err}
 		}
 		max = n
 	}
@@ -373,20 +373,22 @@ func formatNumber(n float64, precision int) string {
 
 // filterFilesize：按 1024 进制格式化字节。模板: {{ 1536|filesize }} -> "1.5 KB"
 // 参数为小数位数，默认 1。单位：B / KB / MB / GB / TB / PB / EB / ZB / YB
-func filterFilesize(in *pongo2.Value, param *pongo2.Value) (*pongo2.Value, *pongo2.Error) {
+func filterFilesize(in *pongo2.Value, param *pongo2.Value) (*pongo2.Value, error) {
 	n, err := valueAsFloat(in)
 	if err != nil {
-		return nil, &pongo2.Error{Sender: "filesize", OrigError: err}
+		return nil, &pongo2.Error{Sender: "filter:filesize", OrigError: err}
 	}
 	return pongo2.AsValue(formatFilesize(n, parsePrecision(param, 1))), nil
 }
 
 // filterNumber：格式化浏览量等大数字。模板: {{ 1500|number }} -> "1.5k"
 // 参数为小数位数，默认 1。单位：k / m / b / t
-func filterNumber(in *pongo2.Value, param *pongo2.Value) (*pongo2.Value, *pongo2.Error) {
+func filterNumber(in *pongo2.Value, param *pongo2.Value) (*pongo2.Value, error) {
 	n, err := valueAsFloat(in)
 	if err != nil {
-		return nil, &pongo2.Error{Sender: "number", OrigError: err}
+
+		return nil, &pongo2.Error{Sender: "filter:number", OrigError: err}
+
 	}
 	return pongo2.AsValue(formatNumber(n, parsePrecision(param, 1))), nil
 }
@@ -472,10 +474,10 @@ func formatFriendlyTime(value, now time.Time) string {
 
 // filterFriendlyTime：将时间格式化为友好的相对时间。模板: {{ created_at|friendly_time }} -> "5分钟前"
 // 支持 time.Time、Unix 秒/毫秒时间戳、RFC3339 及常见日期时间字符串。
-func filterFriendlyTime(in *pongo2.Value, _ *pongo2.Value) (*pongo2.Value, *pongo2.Error) {
+func filterFriendlyTime(in *pongo2.Value, _ *pongo2.Value) (*pongo2.Value, error) {
 	value, err := parseFriendlyTime(in)
 	if err != nil {
-		return nil, &pongo2.Error{Sender: "friendly_time", OrigError: err}
+		return nil, fmt.Errorf("friendly_time: %w", err)
 	}
 	return pongo2.AsValue(formatFriendlyTime(value, time.Now())), nil
 }
