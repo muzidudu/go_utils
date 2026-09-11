@@ -21,8 +21,8 @@ import (
 type SitesEngine struct {
 	core.Engine
 	autoEscape        bool
-	Templates         map[string]*pongo2.Template // key: "theme/name"
-	set               *pongo2.TemplateSet         // 共享 TemplateSet，所有 theme 的模板共用
+	Templates         map[string]*pongo2.Template   // key: "theme/name"
+	themeSets         map[string]*pongo2.TemplateSet // 每个 theme 一个 set（带正确 loader）
 	tagParsers        []tagParser
 	tagsRegistered    bool
 	tagsRegMu         sync.Mutex
@@ -40,11 +40,9 @@ type tagParser struct {
 // baseDir: 模板根目录，如 "views"
 // extension: 模板扩展名，如 ".django"
 func New(baseDir, extension string) *SitesEngine {
-	loader := pongo2.MustNewLocalFileSystemLoader("")
-	set := pongo2.NewSet("sites", loader)
 	e := &SitesEngine{
 		Templates:  make(map[string]*pongo2.Template),
-		set:        set,
+		themeSets:  make(map[string]*pongo2.TemplateSet),
 		tagParsers: nil,
 	}
 
@@ -55,7 +53,6 @@ func New(baseDir, extension string) *SitesEngine {
 	e.Engine.LayoutName = "embed"
 	e.Engine.Funcmap = make(map[string]interface{})
 	e.autoEscape = true
-	e.set.SetAutoescape(e.autoEscape)
 	e.initBuiltinFilters()
 	return e
 }
@@ -124,15 +121,12 @@ func getThemeFromBinding(binding interface{}) string {
 
 // Load 加载所有站点的模板
 func (e *SitesEngine) Load() error {
-	if err := e.registerFilters(); err != nil {
-		return err
-	}
+	e.filtersRegMu.Lock()
+	e.filtersRegistered = true
+	e.filtersRegMu.Unlock()
 
 	e.tagsRegMu.Lock()
-	if !e.tagsRegistered && len(e.tagParsers) > 0 {
-		for _, tp := range e.tagParsers {
-			_ = e.set.RegisterTag(tp.name, tp.fn)
-		}
+	if len(e.tagParsers) > 0 {
 		e.tagsRegistered = true
 	}
 	e.tagsRegMu.Unlock()
@@ -141,9 +135,9 @@ func (e *SitesEngine) Load() error {
 	defer e.Mutex.Unlock()
 
 	e.Templates = make(map[string]*pongo2.Template)
+	e.themeSets = make(map[string]*pongo2.TemplateSet)
 	baseDir := e.Directory
 	templateDir := filepath.Join(baseDir, "template")
-	e.set.SetAutoescape(e.autoEscape)
 
 	entries, err := os.ReadDir(templateDir)
 	if err != nil {
@@ -174,7 +168,24 @@ func (e *SitesEngine) Load() error {
 
 // loadTheme 加载单个 theme 目录下的模板
 func (e *SitesEngine) loadTheme(themePath, theme string) error {
-	e.set.Globals.Update(e.Funcmap)
+	loader := pongo2.MustNewLocalFileSystemLoader(themePath)
+	pongoset := pongo2.NewSet("theme:"+theme, loader)
+	pongoset.Globals.Update(e.Funcmap)
+	pongoset.SetAutoescape(e.autoEscape)
+	e.themeSets[theme] = pongoset
+
+	// 在解析模板前，将 filter 和 tag 注册到该 set
+	if err := e.registerFiltersToSet(pongoset); err != nil {
+		return err
+	}
+	e.tagsRegMu.Lock()
+	if e.tagsRegistered {
+		for _, tp := range e.tagParsers {
+			_ = pongoset.RegisterTag(tp.name, tp.fn)
+		}
+	}
+	e.tagsRegMu.Unlock()
+
 	walkFn := func(path string, info os.FileInfo, err error) error {
 		if err != nil || info == nil || info.IsDir() {
 			return err
@@ -194,7 +205,7 @@ func (e *SitesEngine) loadTheme(themePath, theme string) error {
 		if err != nil {
 			return err
 		}
-		tmpl, err := e.set.FromBytes(buf)
+		tmpl, err := pongoset.FromBytes(buf)
 		if err != nil {
 			return err
 		}

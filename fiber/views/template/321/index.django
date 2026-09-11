@@ -8,3 +8,4 @@
 <p>站点ID: {{ MySite.ID}}</p>
 <p>模板: {{ Theme }}</p>
 <p>模板路径: {{ ThemePath }}</p>
+{% include "common/abc.django" %}

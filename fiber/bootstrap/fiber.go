@@ -15,7 +15,7 @@ func initFiber(cfg *Config) *fiber.App {
 	// 多站点 Pongo2 模板引擎，支持 RegisterTag
 	engine := template.New("./views", ".django")
 	engine.Reload(true)
-	engine.Debug(false)
+	engine.Debug(true)
 	// 注册自定义 tag 示例：engine.RegisterTag("uppercase", template.TagUppercaseParser)
 	engine.RegisterTag("uppercase", template.TagUppercaseParser)
 

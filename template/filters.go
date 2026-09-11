@@ -12,12 +12,17 @@ type filterEntry struct {
 	replace bool
 }
 
-// RegisterFilter 注册自定义 pongo2 filter，需在 Load 之前调用（Load 之后调用则立即注册到引擎的 TemplateSet）。
+// RegisterFilter 注册自定义 pongo2 filter，需在 Load 之前调用（Load 之后调用则立即注册到所有 theme 的 TemplateSet）。
 func (e *SitesEngine) RegisterFilter(name string, fn pongo2.FilterFunction) error {
 	e.filtersRegMu.Lock()
 	defer e.filtersRegMu.Unlock()
 	if e.filtersRegistered {
-		return e.set.RegisterFilter(name, fn)
+		for _, set := range e.themeSets {
+			if err := set.RegisterFilter(name, fn); err != nil {
+				return err
+			}
+		}
+		return nil
 	}
 	if e.filterExistsLocked(name) {
 		return fmt.Errorf("filter with name '%s' is already registered", name)
@@ -31,7 +36,12 @@ func (e *SitesEngine) ReplaceFilter(name string, fn pongo2.FilterFunction) error
 	e.filtersRegMu.Lock()
 	defer e.filtersRegMu.Unlock()
 	if e.filtersRegistered {
-		return e.set.ReplaceFilter(name, fn)
+		for _, set := range e.themeSets {
+			if err := set.ReplaceFilter(name, fn); err != nil {
+				return err
+			}
+		}
+		return nil
 	}
 	for i := range e.filterEntries {
 		if e.filterEntries[i].name == name {
@@ -60,33 +70,45 @@ func (e *SitesEngine) filterExistsLocked(name string) bool {
 			return true
 		}
 	}
-	if e.filtersRegistered && e.set != nil {
-		return e.set.FilterExists(name)
+	if e.filtersRegistered {
+		for _, set := range e.themeSets {
+			if set.FilterExists(name) {
+				return true
+			}
+		}
 	}
 	return pongo2.BuiltinFilterExists(name)
 }
 
+// registerFilters 标记 filter 已注册（实际注册在各 theme set 创建后进行）。
 func (e *SitesEngine) registerFilters() error {
 	e.filtersRegMu.Lock()
 	defer e.filtersRegMu.Unlock()
 	if e.filtersRegistered {
 		return nil
 	}
+	e.filtersRegistered = true
+	return nil
+}
+
+// registerFiltersToSet 将所有待注册 filter 注册到指定的 TemplateSet。
+func (e *SitesEngine) registerFiltersToSet(set *pongo2.TemplateSet) error {
+	e.filtersRegMu.Lock()
+	defer e.filtersRegMu.Unlock()
 	for _, fe := range e.filterEntries {
 		var err error
 		switch {
 		case fe.replace:
-			err = e.set.ReplaceFilter(fe.name, fe.fn)
-		case e.set.FilterExists(fe.name):
+			err = set.ReplaceFilter(fe.name, fe.fn)
+		case set.FilterExists(fe.name):
 			// 避免重复注册
 			continue
 		default:
-			err = e.set.RegisterFilter(fe.name, fe.fn)
+			err = set.RegisterFilter(fe.name, fe.fn)
 		}
 		if err != nil {
 			return fmt.Errorf("filter %q: %w", fe.name, err)
 		}
 	}
-	e.filtersRegistered = true
 	return nil
 }
