@@ -20,8 +20,9 @@ import (
 // binding 中需包含 Theme 或 siteBase.Template 以确定当前站点模板
 type SitesEngine struct {
 	core.Engine
+	extraRoots        []string // 额外的主题根目录，结构为 root/{theme}/*.django
 	autoEscape        bool
-	Templates         map[string]*pongo2.Template   // key: "theme/name"
+	Templates         map[string]*pongo2.Template    // key: "theme/name"
 	themeSets         map[string]*pongo2.TemplateSet // 每个 theme 一个 set（带正确 loader）
 	tagParsers        []tagParser
 	tagsRegistered    bool
@@ -124,44 +125,41 @@ func (e *SitesEngine) Load() error {
 	e.filtersRegMu.Lock()
 	e.filtersRegistered = true
 	e.filtersRegMu.Unlock()
-
 	e.tagsRegMu.Lock()
 	if len(e.tagParsers) > 0 {
 		e.tagsRegistered = true
 	}
 	e.tagsRegMu.Unlock()
-
 	e.Mutex.Lock()
 	defer e.Mutex.Unlock()
-
 	e.Templates = make(map[string]*pongo2.Template)
 	e.themeSets = make(map[string]*pongo2.TemplateSet)
-	baseDir := e.Directory
-	templateDir := filepath.Join(baseDir, "template")
-
-	entries, err := os.ReadDir(templateDir)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return e.loadTheme(baseDir, "default")
+	roots := append([]string{filepath.Join(e.Directory, "template")}, e.extraRoots...)
+	for _, root := range roots {
+		entries, err := os.ReadDir(root)
+		if err != nil {
+			if os.IsNotExist(err) {
+				continue
+			}
+			return fmt.Errorf("read template dir %s: %w", root, err)
 		}
-		return fmt.Errorf("read template dir: %w", err)
+		for _, entry := range entries {
+			if !entry.IsDir() || strings.HasPrefix(entry.Name(), ".") {
+				continue
+			}
+			theme := entry.Name()
+			if _, exists := e.themeSets[theme]; exists {
+				log.Printf("template: theme %s in %s ignored, already loaded", theme, root)
+				continue
+			}
+			if err := e.loadTheme(filepath.Join(root, theme), theme); err != nil {
+				return fmt.Errorf("load theme %s: %w", theme, err)
+			}
+		}
 	}
-
-	for _, entry := range entries {
-		if !entry.IsDir() {
-			continue
-		}
-		theme := entry.Name()
-		themePath := filepath.Join(templateDir, theme)
-		if err := e.loadTheme(themePath, theme); err != nil {
-			return fmt.Errorf("load theme %s: %w", theme, err)
-		}
-	}
-
 	if len(e.Templates) == 0 {
-		return e.loadTheme(baseDir, "default")
+		return e.loadTheme(e.Directory, "default")
 	}
-
 	e.Loaded = true
 	return nil
 }
@@ -277,6 +275,13 @@ func (e *SitesEngine) Render(out io.Writer, name string, binding interface{}, la
 	}
 	_, err = out.Write([]byte(parsed))
 	return err
+}
+
+// AddThemeRoot 追加主题根目录，如 views/custom。需在 Load 之前调用。
+// 主题名与已有目录冲突时，先扫描到的生效。
+func (e *SitesEngine) AddThemeRoot(roots ...string) *SitesEngine {
+	e.extraRoots = append(e.extraRoots, roots...)
+	return e
 }
 
 func getPongoBinding(binding interface{}) pongo2.Context {
